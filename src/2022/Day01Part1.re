@@ -15,7 +15,7 @@ let testInput = {js|1000
 
 // let ( ^:: ) = List.cons;
 
-let split = (~delimiter, lst) => {
+let split = (~delimiter, lst: list(string)) => {
   let rec go = (accList, acc, delimiter, lst) =>
     switch(lst) {
     | [] =>
@@ -52,8 +52,13 @@ File "Day01Part1.re", lines 43-45, characters 0-23:
 Error: This expression has type string list list
        but an expression was expected of type 'a list BsBastet.List.Functor.t
        BsBastet.List.Functor.t is abstract because no corresponding cmi file was found in path.
+
+Can be quickly reproduced with:
+  let test = (x: list(list(string))) =>
+    x |> List.map(List.reverse);
 */
-|> List.map(List.reverse)
-// |> List.toArray
-// |> Array.map(List.reverse >> List.toArray)
-|> Js.log
+// |> List.map(List.reverse)
+|> List.toArray
+|> Array.map(List.reverse >> List.toArray)
+|> Js.log;
+

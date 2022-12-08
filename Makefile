@@ -30,14 +30,6 @@ install: ## Install development dependencies
 build: ## Build the project
 	$(MEL) build
 
-.PHONY: serve
-serve: ## Serve the application with a local HTTP server
-	npm run serve
-
-.PHONY: bundle
-bundle: ## Bundle the JavaScript application
-	npm run bundle
-
 .PHONY: clean
 clean: ## Clean build artifacts and other generated files
 	$(MEL) clean

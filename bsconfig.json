@@ -10,11 +10,7 @@
     "module": "commonjs"
   },
   "suffix": ".bs.js",
-  "reason": {
-    "react-jsx": 3
-  },
   "bs-dependencies": [
-    "@rescript/react",
     "relude"
   ],
   "bsc-flags": [
