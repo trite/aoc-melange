@@ -1,4 +1,4 @@
-# melange-opam-template
+# aoc-melange
 
 A simple project template using [Melange](https://github.com/melange-re/melange)
 with [opam](https://opam.ocaml.org/).

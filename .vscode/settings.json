@@ -1,6 +1,6 @@
 {
   "ocaml.sandbox": {
     "kind": "custom",
-    "template": "opam exec --switch=${workspaceFolder:melange-opam-template} --set-switch -- $prog $args --fallback-read-dot-merlin"
+    "template": "opam exec --switch=${workspaceFolder:aoc-melange} --set-switch -- $prog $args --fallback-read-dot-merlin"
   }
 }
