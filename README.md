@@ -1,6 +1,6 @@
 # aoc-melange
 
-Setting up to do Advent of Code problems using ReasonML, compiling with [Melange](https://github.com/melange-re/melange)
+Setting up to do [Advent of Code](https://adventofcode.com/) problems using ReasonML, compiling with [Melange](https://github.com/melange-re/melange)
 
 ## Quick Start
 
