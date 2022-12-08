@@ -3,7 +3,8 @@
   "name": "melange-basic-project",
   "version": "0.0.1",
   "sources": {
-    "dir": "src"
+    "dir": "src",
+    "subdirs": true
   },
   "package-specs": {
     "module": "commonjs"
