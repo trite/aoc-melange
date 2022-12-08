@@ -13,7 +13,11 @@
     "react-jsx": 3
   },
   "bs-dependencies": [
-    "@rescript/react"
+    "@rescript/react",
+    "relude"
+  ],
+  "bsc-flags": [
+    "-open Relude.Globals"
   ],
   "warnings": {
     "error": "+101"
