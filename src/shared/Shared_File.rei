@@ -1,0 +1,1 @@
+let read: string => string;

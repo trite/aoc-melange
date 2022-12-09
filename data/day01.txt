@@ -1,47 +1,4 @@
-let testInput = {|1000
-2000
-3000
-
-4000
-
-5000
-6000
-
-7000
-8000
-9000
-
-10000|};
-
-let split = (~delimiter, lst) => {
-  let rec go = (accList, acc, delimiter, lst) =>
-    switch(lst) {
-    | [] =>
-      [acc, ...accList]
-      |> List.reverse
-    | [x, ...xs] =>
-      x == delimiter
-      ? go([acc, ...accList], [], delimiter, xs)
-      : go(accList, [x, ...acc], delimiter, xs)
-    };
-  go([], [], delimiter, lst)
-  |> List.map(List.reverse)
-};
-
-let doWork =
-  String.splitList(~delimiter="\n")
-  >> split(~delimiter="")
-  >> List.map(
-    List.map(int_of_string)
-    >> List.foldLeft((+), 0)
-  )
-  >> List.maxBy(Int.compare)
-  >> Js.log;
-
-testInput
-|> doWork;
-
-let myInput = {|5229
+5229
 1021
 2051
 4766
@@ -2278,7 +2235,4 @@ let myInput = {|5229
 2806
 9293
 9680
-10283|};
-
-myInput
-|> doWork;
+10283

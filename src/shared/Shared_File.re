@@ -1,0 +1,1 @@
+let read = Node.Fs.readFileAsUtf8Sync;
