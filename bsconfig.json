@@ -11,6 +11,7 @@
   },
   "suffix": ".bs.js",
   "bs-dependencies": [
+    "bs-bastet",
     "relude"
   ],
   "bsc-flags": [
