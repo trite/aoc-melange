@@ -11,8 +11,16 @@ make init
 make watch
 
 # run something:
-node _build/default/src/2022/Day01Part1.bs.js
+node _build/default/src/2022/Day01.bs.js
 ```
+
+## Folder Structure
+
+Code and data folders are laid out to allow for multiple years of Advent of Code solutions in the same project.
+ * Data in `data/{year}/` (ex: `data/2022/Day01.txt`)
+ * Code in `src/{year}/` (ex: `src/2022/Day01.re`)
+
+Commonly reused helper stuff lives in `src/shared`.
 
 ## Commands
 

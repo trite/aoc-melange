@@ -27,19 +27,20 @@ let part2 =
   >> List.take(3)
   >> List.Int.sum;
 
-Shared.File.read("data/day01test.txt")
+Shared.File.read("data/2022/day01test.txt")
 |> doWork("Part 1 Test  ", part1);
 
-Shared.File.read("data/day01.txt")
+Shared.File.read("data/2022/day01.txt")
 |> doWork("Part 1 Result", part1);
 
-Shared.File.read("data/day01test.txt")
+Shared.File.read("data/2022/day01test.txt")
 |> doWork("Part 2 Test  ", part2);
 
-Shared.File.read("data/day01.txt")
+Shared.File.read("data/2022/day01.txt")
 |> doWork("Part 2 Result", part2);
 
 /*
+$ node _build/default/src/2022/Day01.bs.js
 Part 1 Test   : 24000
 Part 1 Result : 72017
 Part 2 Test   : 45000

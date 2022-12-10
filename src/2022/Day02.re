@@ -55,10 +55,10 @@ let calculatePart1 = ((opponent, self)) => {
   (self |> moveToScore) + (result |> outcomeToScore)
 };
 
-Shared.File.read("data/day02test.txt")
+Shared.File.read("data/2022/day02test.txt")
 |> doWork("Part 1 Test  ", calculatePart1);
 
-Shared.File.read("data/day02.txt")
+Shared.File.read("data/2022/day02.txt")
 |> doWork("Part 1 Result", calculatePart1);
 
 
@@ -94,8 +94,16 @@ let calculatePart2 = ((opponent, self)) => {
   }
 };
 
-Shared.File.read("data/day02test.txt")
+Shared.File.read("data/2022/day02test.txt")
 |> doWork("Part 2 Test  ", calculatePart2);
 
-Shared.File.read("data/day02.txt")
+Shared.File.read("data/2022/day02.txt")
 |> doWork("Part 2 Result", calculatePart2);
+
+/*
+$ node _build/default/src/2022/Day02.bs.js
+Part 1 Test   : 15
+Part 1 Result : 8933
+Part 2 Test   : 12
+Part 2 Result : 11998
+*/
