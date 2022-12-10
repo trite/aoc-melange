@@ -1,4 +1,4 @@
-let findSharedItems = ((a, b)) =>
+let findSharedItem = ((a, b)) =>
       a
       |> String.toArray
       |> Array.filter(x =>
@@ -23,7 +23,7 @@ let charCodeToPriority = x =>
 let getPriority = x =>
     x
     |> String.splitAt((x |> String.length) / 2)
-    |> findSharedItems
+    |> findSharedItem
     |> String.charCodeAt(0)
     |> Option.getOrThrow
     |> charCodeToPriority;
