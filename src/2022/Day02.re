@@ -41,8 +41,7 @@ let doWork = (description, calculation, data) =>
     >> calculation)
   |> List.Int.sum
   |> Int.toString
-  |> (++)(description ++ " : ")
-  |> Js.log;
+  |> Shared.Log.logWithDescription(description);
 
 let calculatePart1 = ((opponent, self)) => {
   let result =
@@ -86,13 +85,12 @@ let winAgainst =
   | Paper    => Scissors
   | Scissors => Rock;
 
-let calculatePart2 = ((opponent, self)) => {
+let calculatePart2 = ((opponent, self)) => 
   switch(self |> convertMoveToOutcome) {
   | Lose => (Lose |> outcomeToScore) + (opponent |> loseTo     |> moveToScore)
   | Draw => (Draw |> outcomeToScore) + (opponent |>               moveToScore)
   | Win  => (Win  |> outcomeToScore) + (opponent |> winAgainst |> moveToScore)
-  }
-};
+  };
 
 Shared.File.read("data/2022/day02test.txt")
 |> doWork("Part 2 Test  ", calculatePart2);

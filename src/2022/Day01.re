@@ -6,17 +6,12 @@ let parse =
     >> List.foldLeft((+), 0)
   );
 
-let log = (description, data) =>
-  data
-  |> Int.toString
-  |> (++)(description ++ " : ")
-  |> Js.log;
-
 let doWork = (description, partFunc, data) =>
   data
   |> parse
   |> partFunc
-  |> log(description);
+  |> Int.toString
+  |> Shared.Log.logWithDescription(description);
 
 let part1 =
   List.maxBy(Int.compare)

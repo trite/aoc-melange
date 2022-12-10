@@ -1,0 +1,1 @@
+let logWithDescription : (string, string) => unit;
