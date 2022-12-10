@@ -1,7 +1,7 @@
 let arrayToTuple3 =
   fun
   | [|a, b, c|] => (a, b, c)
-  | _ => raise(Failure("Invalid chunk!"));
+  | _ => raise(Failure("Cannot convert array to Tuple3 - invalid input"));
 
 let findSharedItem = ((a, b, c)) => {
   let findSharedItems = (a, b) =>
@@ -47,3 +47,9 @@ Shared.File.read("data/2022/day03test.txt")
 
 Shared.File.read("data/2022/day03.txt")
 |> doWork("Result");
+
+/*
+$ node _build/default/src/2022/Day03Part2.bs.js
+Test   : 70
+Result : 2581
+*/
