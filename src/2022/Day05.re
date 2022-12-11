@@ -66,34 +66,36 @@ let parseInput = {
   >> parseLayoutAndMoves;
 };
 
-let doMove = (layout, start, destination) => {
-  let (toMove, startStack) =
+
+let applyMoves = ((layout, moves)) => {
+  let moveItem = (layout, start, destination) => {
+    let (toMove, startStack) =
+      layout
+      |> Map.get(start)
+      |> Option.flatMap(List.uncons)
+      |> Option.getOrThrow;
+
+    let destinationStack =
+      layout
+      |> Map.get(destination)
+      |> Option.getOrThrow
+      |> List.cons(toMove);
+
     layout
-    |> Map.get(start)
-    |> Option.flatMap(List.uncons)
-    |> Option.getOrThrow;
-
-  let destinationStack =
-    layout
-    |> Map.get(destination)
-    |> Option.getOrThrow
-    |> List.cons(toMove);
-
-  layout
-  |> Map.update(start, _ => Some(startStack))
-  |> Map.update(destination, _ => Some(destinationStack))
-};
-
-let rec applyMove = (layout, move) =>
-  switch(move) {
-  | {count: 0, start: _, destination: _} => layout
-  | {count: x, start, destination} => 
-    applyMove(doMove(layout, start, destination), {count: x-1, start, destination})
+    |> Map.update(start, _ => Some(startStack))
+    |> Map.update(destination, _ => Some(destinationStack))
   };
 
-let applyMoves = ((layout, moves)) =>
+  let rec applyMove = (layout, move) =>
+    switch(move) {
+    | {count: 0, start: _, destination: _} => layout
+    | {count: x, start, destination} => 
+      applyMove(moveItem(layout, start, destination), {count: x-1, start, destination})
+    };
+
   moves
-  |> List.foldLeft(applyMove, layout);
+  |> List.foldLeft(applyMove, layout)
+}
 
 // TODO: result was wrong, trying to figure out why
 //       might be worth implementing a better way to display the crate layout
