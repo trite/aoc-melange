@@ -22,7 +22,7 @@ let charCodeToPriority = x =>
   };
 
 let chunkToPriority = 
-  Shared.Array.arrayToTuple3
+  Shared.Array.toTuple3
   >> findSharedItem
   >> String.charCodeAt(0)
   >> Option.getOrThrow

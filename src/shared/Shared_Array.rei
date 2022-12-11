@@ -1,2 +1,2 @@
-let arrayToTuple2 : array('a) => ('a, 'a);
-let arrayToTuple3 : array('a) => ('a, 'a, 'a);
+let toTuple2 : array('a) => ('a, 'a);
+let toTuple3 : array('a) => ('a, 'a, 'a);

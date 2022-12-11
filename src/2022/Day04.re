@@ -3,8 +3,8 @@ let parse =
   >> Array.map(
     String.splitArray(~delimiter="-")
     >> Array.map(Int.fromString >> Option.getOrThrow)
-    >> Shared.Array.arrayToTuple2)
-  >> Shared.Array.arrayToTuple2;
+    >> Shared.Array.toTuple2)
+  >> Shared.Array.toTuple2;
 
 /*
 $ node _build/default/src/2022/Day04.bs.js
