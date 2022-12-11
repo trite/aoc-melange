@@ -1,15 +1,10 @@
-let arrayToTuple2 =
-  fun
-  | [|a, b|] => (a, b)
-  | _ => raise(Failure("Cannot convert array to Tuple2 - invalid input"));
-
 let parse =
   String.splitArray(~delimiter=",")
   >> Array.map(
     String.splitArray(~delimiter="-")
     >> Array.map(Int.fromString >> Option.getOrThrow)
-    >> arrayToTuple2)
-  >> arrayToTuple2;
+    >> Shared.Array.arrayToTuple2)
+  >> Shared.Array.arrayToTuple2;
 
 /*
 $ node _build/default/src/2022/Day04.bs.js

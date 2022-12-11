@@ -1,8 +1,3 @@
-let arrayToTuple3 =
-  fun
-  | [|a, b, c|] => (a, b, c)
-  | _ => raise(Failure("Cannot convert array to Tuple3 - invalid input"));
-
 let findSharedItem = ((a, b, c)) => {
   let findSharedItems = (a, b) =>
     a
@@ -27,7 +22,7 @@ let charCodeToPriority = x =>
   };
 
 let chunkToPriority = 
-  arrayToTuple3
+  Shared.Array.arrayToTuple3
   >> findSharedItem
   >> String.charCodeAt(0)
   >> Option.getOrThrow
