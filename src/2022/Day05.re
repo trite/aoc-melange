@@ -60,7 +60,6 @@ let parseInput = {
   >> parseLayoutAndMoves;
 };
 
-
 let applyMovesPart1 = ((layout, moves)) => {
   let moveItem = (layout, start, destination) => {
     let (toMove, startStack) =
@@ -91,10 +90,28 @@ let applyMovesPart1 = ((layout, moves)) => {
   |> List.foldLeft(applyMove, layout)
 };
 
-// TODO: later
-// let applyMovesPart2 = ((layout, moves)) => {
+let applyMovesPart2 = ((layout, moves)) => {
+  let applyMove = (layout, {count, start, destination}) => {
+    let (toMove, startStack) =
+      layout
+      |> Map.get(start)
+      |> Option.flatMap(List.splitAt(count))
+      |> Option.getOrThrow;
+    
+    let destinationStack =
+      layout
+      |> Map.get(destination)
+      |> Option.getOrThrow
+      |> List.concat(toMove);
 
-// }
+    layout
+    |> Map.update(start, _ => Some(startStack))
+    |> Map.update(destination, _ => Some(destinationStack))
+  }
+
+  moves
+  |> List.foldLeft(applyMove, layout)
+}
 
 let grabResult = 
   Map.toArray
@@ -117,8 +134,8 @@ Shared.File.read("data/2022/day05test.txt")
 Shared.File.read("data/2022/day05.txt")
 |> doWork("Part 1 Result", applyMovesPart1);
 
-// Shared.File.read("data/2022/day05test.txt")
-// |> doWork("Part 2 Test  ", applyMovesPart2);
+Shared.File.read("data/2022/day05test.txt")
+|> doWork("Part 2 Test  ", applyMovesPart2);
 
-// Shared.File.read("data/2022/day05.txt")
-// |> doWork("Part 2 Result", applyMovesPart2);
+Shared.File.read("data/2022/day05.txt")
+|> doWork("Part 2 Result", applyMovesPart2);
