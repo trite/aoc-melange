@@ -28,13 +28,10 @@ let parseInput = {
         List.reverse
         >> List.filter(x => x != " ")
         >> List.uncons 
-        >> Option.getOrThrow)
-      >> String.Map.fromList
-      // >> Map.forEach((s, slist) => Js.log((s, slist |> List.toArray))) // to examine contents
-      ; 
+        >> Option.getOrThrow
+        >> (((x, lst)) => (x, lst |> List.reverse)))
+      >> String.Map.fromList; 
 
-    // let parseMove =
-    //   String.splitList
     let parseMove =
       fun
       | ["move", count, "from", start, "to", destination] =>
@@ -49,10 +46,7 @@ let parseInput = {
       List.map(
         String.splitList(~delimiter=" ")
         >> parseMove
-      )
-      // >> List.toArray // to examine contents
-      ;
-      // >> List.map(parseMove);
+      );
 
     (
       layout |> parseLayout,
@@ -67,7 +61,7 @@ let parseInput = {
 };
 
 
-let applyMoves = ((layout, moves)) => {
+let applyMovesPart1 = ((layout, moves)) => {
   let moveItem = (layout, start, destination) => {
     let (toMove, startStack) =
       layout
@@ -95,55 +89,36 @@ let applyMoves = ((layout, moves)) => {
 
   moves
   |> List.foldLeft(applyMove, layout)
-}
+};
 
-// TODO: result was wrong, trying to figure out why
-//       might be worth implementing a better way to display the crate layout
+// TODO: later
+// let applyMovesPart2 = ((layout, moves)) => {
 
-let doWork = (_description, data) =>
+// }
+
+let grabResult = 
+  Map.toArray
+  >> Array.map(
+    Tuple.second
+    >> List.head
+    >> Option.getOrThrow)
+  >> Array.String.join;
+
+let doWork = (description, fApplyMoves, data) =>
   data
   |> parseInput
-  |> (((layout, _)) => layout)
-  // |> (((layout, moves)) =>{
-  //   let m = moves |> List.head |> Option.getOrThrow;
-  //   applyMove(layout, m)
-  // })
-  |> Map.map(List.toArray)
-  |> Map.toArray
-  |> Js.log;
-  // |> applyMoves
-  // |> Map.toArray
-  // |> Array.map(((x, lst)) => (x, lst |> List.reverse |> List.toArray))
-  // // |> Array.map(((_, lst)) => lst |> List.reverse |> List.head)
-  // |> Js.log;
+  |> fApplyMoves
+  |> grabResult
+  |> Shared.Log.logWithDescription(description);
 
 Shared.File.read("data/2022/day05test.txt")
-|> doWork("Part 1 Test  ");
+|> doWork("Part 1 Test  ", applyMovesPart1);
 
-/*
-[
-  [
-    [ ' ', 'D', ' ' ],
-    [ 'N', 'C', ' ' ],
-    [ 'Z', 'M', 'P' ],
-    [ '1', '2', '3' ]
-  ],
-  [
-    'move 1 from 2 to 1',
-    'move 3 from 1 to 3',
-    'move 2 from 2 to 1',
-    'move 1 from 1 to 2'
-  ]
-]
-*/
-
-
-
-// Shared.File.read("data/2022/day05.txt")
-// |> doWork("Part 1 Result");
+Shared.File.read("data/2022/day05.txt")
+|> doWork("Part 1 Result", applyMovesPart1);
 
 // Shared.File.read("data/2022/day05test.txt")
-// |> doWork("Part 2 Test  ");
+// |> doWork("Part 2 Test  ", applyMovesPart2);
 
 // Shared.File.read("data/2022/day05.txt")
-// |> doWork("Part 2 Result");
+// |> doWork("Part 2 Result", applyMovesPart2);
