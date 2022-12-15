@@ -55,6 +55,8 @@ type fileSystem =
 
 type path = list(string);
 
+let rootPath = [];
+
 let newDirectory = Directory(String.Map.make());
 
 let fsInsert = (~insertAt: path, ~newItem: fileSystem, ~newItemName: string, fs: fileSystem) => {
@@ -93,12 +95,6 @@ Attempting to insert
   go(insertAt, newItem, newItemName, fs)
 };
 
-// let prettyPrintFS = id; // TODO: recurse filesystem and emit lines that then get joined into a list to display
-// let rec prettyPrintFS = fs => {
-//   fun
-//   | File(size) => {j|(file, size=$size)|j}
-//   | Directory()
-// }
 let prettyPrintFS = fs => {
   let rec go = (name, depth, fs) => {
     let spaces = String.repeat(depth-1, "  ");
@@ -114,10 +110,45 @@ let prettyPrintFS = fs => {
   };
 
   go("/", 0, fs)
+  |> List.toArray
 };
 
+let runLines = (lines: list(line)) => {
+  let runLine = (line, (currentPath, fs)) =>
+    switch(line, currentPath) {
+    // cd to root (modify path)
+    | (Command(ChangeDirectory("/")), _) => (rootPath, fs)
 
-// let runLine = (ln: line, fs: fileSystem) =>
+    // up a directory successfully (modify path)
+    | (Command(ChangeDirectory("..")), [_, ...restOfPath]) => (restOfPath, fs)
+
+    // up a directory from root (fail)
+    | (Command(ChangeDirectory("..")), []) => raise(Failure("Tried to `cd ..` from root!"))
+
+    // down a directory (modify path)
+    | (Command(ChangeDirectory(target)), current) => ([target, ...current], fs)
+
+    // list directory contents (noop)
+    | (Command(ListContents), current) => (current, fs)
+
+    // directory info (insert into fs object)
+    | (FileSystemInfo(DirectoryName(name)), current) =>
+      (current, fsInsert(~insertAt=current, ~newItem=newDirectory, ~newItemName=name, fs))
+    
+    // file info (insert into fs object)
+    | (FileSystemInfo(FileInfo({name, size})), current) =>
+      (current, fsInsert(~insertAt=current, ~newItem=File(size), ~newItemName=name, fs))
+    };
+
+  let rec go = (lines: list(line), (currentPath: path, fs: fileSystem)) =>
+    switch(lines |> List.uncons) {
+    | Some((ln, rest)) => go(rest, runLine(ln, (currentPath, fs)))
+    | None => fs
+    };
+
+  go(lines, (rootPath, newDirectory))
+}
+
   
 //   ;
 
@@ -127,7 +158,10 @@ let doWork = (_description, data) =>
   |> List.map(
     String.splitList(~delimiter=" ")
     >> parseLine)
-  |> List.forEach(prettyPrintLine >> Js.log); // to visualize
+  |> runLines
+  // |> prettyPrintFS
+  |> Js.log;
+  // |> List.forEach(prettyPrintLine >> Js.log); // to visualize
 
 Shared.File.read("data/2022/day07test.txt")
 |> doWork("Part 1 Test  ");
