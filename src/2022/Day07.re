@@ -55,11 +55,21 @@ type fileSystem =
 
 type path = list(string);
 
+// let prettyPrintPath = List.intersperse("/") >> List.String.join;
+// let prettyPrintPath = p => "/" ++ List.String.joinWith("/", p);
+let prettyPrintPath =
+  List.reverse
+  >> List.String.joinWith("/")
+  >> (++)("/");
+
 let rootPath = [];
 
 let newDirectory = Directory(String.Map.make());
 
 let fsInsert = (~insertAt: path, ~newItem: fileSystem, ~newItemName: string, fs: fileSystem) => {
+  let friendlyPath = insertAt |> prettyPrintPath;
+  Js.log({j|fsInsert ($friendlyPath, $newItemName)|j});
+
   let rec go = (remaining: path, newItem: fileSystem, newItemName: string, fs: fileSystem): fileSystem => {
     switch((remaining |> List.uncons, fs)) {
     | (Some((dirName, restOfPath)), Directory(toUpdate)) =>
@@ -92,12 +102,12 @@ Attempting to insert
     }
   }
 
-  go(insertAt, newItem, newItemName, fs)
+  go(insertAt |> List.reverse, newItem, newItemName, fs)
 };
 
 let prettyPrintFS = fs => {
   let rec go = (name, depth, fs) => {
-    let spaces = String.repeat(depth-1, "  ");
+    let spaces = String.repeat(depth, "  ");
 
     switch(fs) {
     | File(size) => [{j|$(spaces)- $name (file, size=$size)|j}]
@@ -159,7 +169,17 @@ let doWork = (_description, data) =>
     String.splitList(~delimiter=" ")
     >> parseLine)
   |> runLines
-  // |> prettyPrintFS
+  // |> (fun
+  //     | File(_) => [||]
+  //     // | Directory(m) =>
+  //     //   m
+  //     //   |> String.Map.get("a")
+  //     //   |> Option.getOrThrow
+  //     //   |> (fun
+  //     //       | File(_) => [||]
+  //     //       | Directory(a) => a |> String.Map.toArray))
+  //     | Directory(m) => m |> String.Map.toArray)
+  |> prettyPrintFS
   |> Js.log;
   // |> List.forEach(prettyPrintLine >> Js.log); // to visualize
 
