@@ -215,7 +215,7 @@ let flattenDirs = (fs): list(directory) => {
   go(fs)
 };
 
-let doWork = (description, data) =>
+let doWorkPart1 = (description, data) =>
   data
   |> String.splitList(~delimiter="\n")
   |> List.map(
@@ -231,10 +231,40 @@ let doWork = (description, data) =>
   |> Shared.Log.logWithDescription(description);
 
 Shared.File.read("data/2022/day07test.txt")
-|> doWork("Part 1 Test  ");
+|> doWorkPart1("Part 1 Test  ");
 
 Shared.File.read("data/2022/day07.txt")
-|> doWork("Part 1 Result");
+|> doWorkPart1("Part 1 Result");
+
+let getTargetAmount = fs =>
+  switch(fs) {
+  | File(_) => raise(Failure("This should be a directory!"))
+  | Directory({size, contents:_}) =>
+    (30000000 - (70000000 - (size |> Option.getOrThrow)), fs)
+  };
+  // (70000000 - )
+
+let mapSecondTuple = (f, (x, y)) =>
+  (x, y |> f);
+
+let doWorkPart2 = (description, data) =>
+  data
+  |> String.splitList(~delimiter="\n")
+  |> List.map(
+    String.splitList(~delimiter=" ")
+    >> parseLine)
+  |> runLines
+  |> calculateDirSizes
+  |> getTargetAmount
+  |> mapSecondTuple(flattenDirs)
+  |> ((needFileAtLeastThisBig, fs) => // TODO
+
+  )
+  // |> List.map(({size, contents: _}) => size |> Option.getOrThrow)
+  // |> List.filter(x => x <= 100000)
+  // |> List.Int.sum
+  // |> Int.toString
+  // |> Shared.Log.logWithDescription(description);
 
 // Shared.File.read("data/2022/day07test.txt")
 // |> doWork("Part 2 Test  ");
