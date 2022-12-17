@@ -242,8 +242,9 @@ let getTargetAmount = fs =>
   | Directory({size, contents:_}) =>
     (30000000 - (70000000 - (size |> Option.getOrThrow)), fs)
   };
-  // (70000000 - )
 
+// TODO: I feel like this exists somewhere in Relude already
+//       Search more, maybe add it if not? (and equivalent mirrored)
 let mapSecondTuple = (f, (x, y)) =>
   (x, y |> f);
 
@@ -257,17 +258,32 @@ let doWorkPart2 = (description, data) =>
   |> calculateDirSizes
   |> getTargetAmount
   |> mapSecondTuple(flattenDirs)
-  |> ((needFileAtLeastThisBig, fs) => // TODO
-
+  |> (((needFileAtLeastThisBig, fs)) => // TODO
+    fs
+    |> List.filter(({size, contents: _}) =>
+      (size|> Option.getOrThrow) >= needFileAtLeastThisBig)
+    |> List.sortBy(
+      (({size: size1, contents: _}), ({size: size2, contents: _})) =>
+       Int.compare(size1 |> Option.getOrThrow, size2 |> Option.getOrThrow))
+    |> List.head
+    |> Option.getOrThrow
+    |> (({size, contents: _}) =>
+      size
+      |> Option.getOrThrow
+      |> Int.toString
+      |> Shared.Log.logWithDescription(description))
   )
-  // |> List.map(({size, contents: _}) => size |> Option.getOrThrow)
-  // |> List.filter(x => x <= 100000)
-  // |> List.Int.sum
-  // |> Int.toString
-  // |> Shared.Log.logWithDescription(description);
 
-// Shared.File.read("data/2022/day07test.txt")
-// |> doWork("Part 2 Test  ");
+Shared.File.read("data/2022/day07test.txt")
+|> doWorkPart2("Part 2 Test  ");
 
-// Shared.File.read("data/2022/day07.txt")
-// |> doWork("Part 2 Result");
+Shared.File.read("data/2022/day07.txt")
+|> doWorkPart2("Part 2 Result");
+
+/*
+$ node _build/default/src/2022/Day07.bs.js
+Part 1 Test   : 95437
+Part 1 Result : 1141028
+Part 2 Test   : 24933642
+Part 2 Result : 8278005
+*/
