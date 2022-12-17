@@ -215,26 +215,13 @@ let flattenDirs = (fs): list(directory) => {
   go(fs)
 };
 
-let doWorkPart1 = (description, data) =>
-  data
-  |> String.splitList(~delimiter="\n")
-  |> List.map(
-    String.splitList(~delimiter=" ")
-    >> parseLine)
-  |> runLines
-  |> calculateDirSizes
-  |> flattenDirs
-  |> List.map(({size, contents: _}) => size |> Option.getOrThrow)
-  |> List.filter(x => x <= 100000)
-  |> List.Int.sum
-  |> Int.toString
-  |> Shared.Log.logWithDescription(description);
+let part1 =
+  flattenDirs
+  >> List.map(({size, contents: _}) => size |> Option.getOrThrow)
+  >> List.filter(x => x <= 100000)
+  >> List.Int.sum;
 
-Shared.File.read("data/2022/day07test.txt")
-|> doWorkPart1("Part 1 Test  ");
-
-Shared.File.read("data/2022/day07.txt")
-|> doWorkPart1("Part 1 Result");
+// Part 2
 
 let getTargetAmount = fs =>
   switch(fs) {
@@ -248,7 +235,27 @@ let getTargetAmount = fs =>
 let mapSecondTuple = (f, (x, y)) =>
   (x, y |> f);
 
-let doWorkPart2 = (description, data) =>
+let findSmallestFolder = ((minFolderSize, fs)) =>
+    fs
+    |> List.mapOption(({size, contents: _}) =>
+      size
+      |> Option.flatMap(s => 
+        (s >= minFolderSize)
+        ? Some(s)
+        : None)
+    )
+    |> List.sortBy(Int.compare)
+    |> List.head
+    |> Option.getOrThrow;
+
+let part2 =
+  getTargetAmount
+  >> mapSecondTuple(flattenDirs)
+  >> findSmallestFolder;
+
+// Program boundry work (IO)
+
+let doWork = (description, partSpecificStuff, data) =>
   data
   |> String.splitList(~delimiter="\n")
   |> List.map(
@@ -256,29 +263,21 @@ let doWorkPart2 = (description, data) =>
     >> parseLine)
   |> runLines
   |> calculateDirSizes
-  |> getTargetAmount
-  |> mapSecondTuple(flattenDirs)
-  |> (((needFileAtLeastThisBig, fs)) => // TODO
-    fs
-    |> List.filter(({size, contents: _}) =>
-      (size|> Option.getOrThrow) >= needFileAtLeastThisBig)
-    |> List.sortBy(
-      (({size: size1, contents: _}), ({size: size2, contents: _})) =>
-       Int.compare(size1 |> Option.getOrThrow, size2 |> Option.getOrThrow))
-    |> List.head
-    |> Option.getOrThrow
-    |> (({size, contents: _}) =>
-      size
-      |> Option.getOrThrow
-      |> Int.toString
-      |> Shared.Log.logWithDescription(description))
-  )
+  |> partSpecificStuff
+  |> Int.toString
+  |> Shared.Log.logWithDescription(description)
 
 Shared.File.read("data/2022/day07test.txt")
-|> doWorkPart2("Part 2 Test  ");
+|> doWork("Part 1 Test  ", part1);
 
 Shared.File.read("data/2022/day07.txt")
-|> doWorkPart2("Part 2 Result");
+|> doWork("Part 1 Result", part1);
+
+Shared.File.read("data/2022/day07test.txt")
+|> doWork("Part 2 Test  ", part2);
+
+Shared.File.read("data/2022/day07.txt")
+|> doWork("Part 2 Result", part2);
 
 /*
 $ node _build/default/src/2022/Day07.bs.js
