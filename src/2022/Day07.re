@@ -253,7 +253,7 @@ let part2 =
   >> mapSecondTuple(flattenDirs)
   >> findSmallestFolder;
 
-// Program boundry work (IO)
+// Program boundry IO
 
 let doWork = (description, partSpecificStuff, data) =>
   data
