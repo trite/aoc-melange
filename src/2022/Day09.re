@@ -2,11 +2,9 @@ module Position = {
   type t = (int, int);
 
   let compare = ((x1, y1), (x2, y2)) =>
-    switch(x2 - x1, y2 - y1) {
-    | (0, 0) => `equal_to
-    | (x, y) when x > 0 || y > 0 => `greater_than
-    | (x, y) when x < 0 || y < 0 => `less_than
-    | _ => raise(Failure("Hmm..."))
+    switch(Int.compare(x1, x2)) {
+    | `equal_to => Int.compare(y1, y2)
+    | other => other
     };
 
   let eq = ((x1, y1), (x2, y2)) =>
@@ -113,7 +111,8 @@ type positionInfo = {
   head: position,
   tail: position,
   // tailVisited: Set.t(position, position)
-  tailVisited: list(position)
+  // tailVisited: list(position)
+  tailVisited: Position.Set.t
 };
 
 let applyMoveIncrement = ({head, tail, tailVisited}: positionInfo, move: move) => {
@@ -184,7 +183,8 @@ let applyMoveIncrement = ({head, tail, tailVisited}: positionInfo, move: move) =
     {
       head: newHead,
       tail: newTail,
-      tailVisited: newTail ^:: tailVisited
+      // tailVisited: newTail ^:: tailVisited
+      tailVisited: Position.Set.add(newTail, tailVisited)
     },
     restOfMove
   )
@@ -203,7 +203,10 @@ let applyMoves = (position, moves) =>
 let startingPosition = {
   head: (0,0),
   tail: (0,0),
-  tailVisited: [(0, 0)]
+  tailVisited:
+    Position.Set.empty
+    |> Position.Set.add((0, 0))
+  // tailVisited: [(0, 0)]
 };
 
 let getTailVisited = ({head: _, tail: _, tailVisited}) =>
@@ -215,8 +218,9 @@ let positionEq = ((hx, hy), (tx, ty)) =>
 let part1 =
   applyMoves(startingPosition)
   >> getTailVisited
-  >> List.distinctBy(positionEq)
-  >> List.toArray
+  // >> List.distinctBy(positionEq)
+  >> Position.Set.toArray
+  // >> List.toArray
   >> Array.length;
 
 let run = (_description, part, data) =>
