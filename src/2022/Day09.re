@@ -7,8 +7,8 @@ module Position = {
     | other => other
     };
 
-  let eq = ((x1, y1), (x2, y2)) =>
-    x1 == x2 && y1 == y2;
+  let eq = (t1, t2) =>
+    compare(t1, t2) == `equal_to;
 
   module Ord = {
     type nonrec t = t;
@@ -109,20 +109,46 @@ type position = Position.t;
 
 type positionInfo = {
   head: position,
-  tail: position,
+  // tail: position,
+  tail: list(position),
   // tailVisited: Set.t(position, position)
   // tailVisited: list(position)
   tailVisited: Position.Set.t
 };
 
-let applyMoveIncrement = ({head, tail, tailVisited}: positionInfo, move: move) => {
-  // let applyMove = (move, (startX, startY)) =>
-  //   switch(move) {
-  //   | Up(y) => (startX, startY + y)
-  //   | Down(y) => (startX, startY - y)
-  //   | Left(x) => (startX - x, startY)
-  //   | Right(x) => (startX + x, startY)
-  //   };
+let moveTailIfNeeded = ((hx, hy), (tx, ty)) => 
+  switch(hx - tx, hy - ty) {
+  // No movement
+  | (0, 0)                              // same spot
+  | (0, -1)                             // down
+  | (0, 1)                              // up
+  | (-1, 0)                             // left
+  | (1, 0)                              // right
+  | (-1, -1)                            // lower-left
+  | (-1, 1)                             // upper-left
+  | (1, -1)                             // lower-right
+  | (1, 1) => (tx, ty)                  // upper-right
+
+  // Causes movement
+  | (0, -2) => (tx, ty-1)               // down
+  | (0, 2) => (tx, ty+1)                // up
+  | (-2, 0) => (tx-1, ty)               // left
+  | (2, 0) => (tx+1, ty)                // right
+  | (-1, -2) | (-2, -1) => (tx-1, ty-1) // lower-left
+  | (-1, 2) | (-2, 1) => (tx-1, ty+1)   // upper-left
+  | (1, -2) | (2, -1) => (tx+1, ty-1)   // lower-right
+  | (1, 2) | (2, 1) => (tx+1, ty+1)     // upper-right
+
+  // OH NOES
+  | _ => raise(
+    Failure({j|
+      This shouldn't be possible!
+      (hx, hy), (tx, ty)
+      ($hx, $hy), ($tx, $ty)
+    |j}))
+  };
+
+let applyMoveIncrement = ({head, tail, tailVisited}: positionInfo, move: move, debug) => {
   let applyMove = (move, (startX, startY)) =>
     switch(move) {
     | Up(y) => ((startX, startY + 1), Up(y-1))
@@ -131,78 +157,108 @@ let applyMoveIncrement = ({head, tail, tailVisited}: positionInfo, move: move) =
     | Right(x) => ((startX + 1, startY), Right(x-1))
     };
 
-  let moveIfNeeded = ((hx, hy), (tx, ty)) => {
-    switch(hx - tx, hy - ty) {
-    // No movement
-    | (0, 0)                              // same spot
-    | (0, -1)                             // down
-    | (0, 1)                              // up
-    | (-1, 0)                             // left
-    | (1, 0)                              // right
-    | (-1, -1)                            // lower-left
-    | (-1, 1)                             // upper-left
-    | (1, -1)                             // lower-right
-    | (1, 1) => (tx, ty)                  // upper-right
-
-    // Causes movement
-    | (0, -2) => (tx, ty-1)               // down
-    | (0, 2) => (tx, ty+1)                // up
-    | (-2, 0) => (tx-1, ty)               // left
-    | (2, 0) => (tx+1, ty)                // right
-    | (-1, -2) | (-2, -1) => (tx-1, ty-1) // lower-left
-    | (-1, 2) | (-2, 1) => (tx-1, ty+1)   // upper-left
-    | (1, -2) | (2, -1) => (tx+1, ty-1)   // lower-right
-    | (1, 2) | (2, 1) => (tx+1, ty+1)     // upper-right
-
-    // OH NOES
-    | _ => raise(
-      Failure({j|
-        This shouldn't be possible!
-        (hx, hy), (tx, ty)
-        ($hx, $hy), ($tx, $ty)
-      |j}))
-    }
-  };
-
   let (newHead, restOfMove) = head |> applyMove(move);
 
-  let newTail = tail |> moveIfNeeded(newHead);
+  let rec updateTail =
+    fun
+    | [a, b, ...rest] => {
+      let nt = moveTailIfNeeded(a, b);
+
+      if (debug) {
+        // Debug movements
+        let calcDists = ((dx, dy), (sx, sy)) =>
+          (dx - sx, dy - sy);
+        let distHead = calcDists(newHead, head);
+        let distTail = calcDists(nt, b);
+        Js.log({j|
+          ----
+          (($head), ($tail)) => (($newHead), ($nt))
+          ($distHead, $distTail)
+        |j});
+      };
+
+      [nt, ...updateTail([nt, ...rest])]
+    }
+    | [_] => []
+    | [] => raise(Failure("This shouldn't be completely empty!"));
+
+  let newTail =
+    (newHead ^:: tail)
+    |> updateTail
+    |> List.reverse;
+
+  // let newTail =
+  //   (newHead ^:: tail)
+  //   |> List.foldLeft((h, t) => moveTailIfNeeded(h, t))
+
+  // let newTail = tail |> moveTailIfNeeded(newHead);
 
   // Debug movements
-  // let calcDists = ((dx, dy), (sx, sy)) =>
-  //   (dx - sx, dy - sy);
-  // let distHead = calcDists(newHead, head);
-  // let distTail = calcDists(newTail, tail);
-  // Js.log({j|
-  //   ----
-  //   (($head), ($tail)) => (($newHead), ($newTail))
-  //   ($distHead, $distTail)
-  // |j});
+
+  let newVisited =
+    newTail
+    |> List.foldLeft((tv, n) => Position.Set.add(n, tv), tailVisited);
 
   (
     {
       head: newHead,
       tail: newTail,
+      tailVisited: newVisited
       // tailVisited: newTail ^:: tailVisited
-      tailVisited: Position.Set.add(newTail, tailVisited)
+      // tailVisited: Position.Set.add(newTail, tailVisited)
     },
     restOfMove
   )
 };
 
-let rec applyMove = ((positionInfo, move)) =>
+// let applyMoveIncrement = ({head, tail, tailVisited}: positionInfo, move: move) => {
+//   let applyMove = (move, (startX, startY)) =>
+//     switch(move) {
+//     | Up(y) => ((startX, startY + 1), Up(y-1))
+//     | Down(y) => ((startX, startY - 1), Down(y-1))
+//     | Left(x) => ((startX - 1, startY), Left(x-1))
+//     | Right(x) => ((startX + 1, startY), Right(x-1))
+//     };
+
+//   let (newHead, restOfMove) = head |> applyMove(move);
+
+//   let newTail = tail |> moveTailIfNeeded(newHead);
+
+//   // Debug movements
+//   // let calcDists = ((dx, dy), (sx, sy)) =>
+//   //   (dx - sx, dy - sy);
+//   // let distHead = calcDists(newHead, head);
+//   // let distTail = calcDists(newTail, tail);
+//   // Js.log({j|
+//   //   ----
+//   //   (($head), ($tail)) => (($newHead), ($newTail))
+//   //   ($distHead, $distTail)
+//   // |j});
+
+//   (
+//     {
+//       head: newHead,
+//       tail: newTail,
+//       // tailVisited: newTail ^:: tailVisited
+//       tailVisited: Position.Set.add(newTail, tailVisited)
+//     },
+//     restOfMove
+//   )
+// };
+
+let rec applyMove = ((positionInfo, move), debug) =>
   switch(move) {
   | Up(0) | Down(0) | Left(0) | Right(0) =>
     positionInfo
-  | _ => applyMove(applyMoveIncrement(positionInfo, move))
+  | _ => applyMove(applyMoveIncrement(positionInfo, move, debug), debug)
   }
 
-let applyMoves = (position, moves) =>
-  List.foldLeft((a, b) => applyMove((a, b)), position, moves);
+let applyMoves = (position, debug, moves) =>
+  List.foldLeft((a, b) => applyMove((a, b), debug), position, moves);
 
-let startingPosition = {
+let startingPositionPart1 = {
   head: (0,0),
-  tail: (0,0),
+  tail: [(0,0)],
   tailVisited:
     Position.Set.empty
     |> Position.Set.add((0, 0))
@@ -215,15 +271,35 @@ let getTailVisited = ({head: _, tail: _, tailVisited}) =>
 let positionEq = ((hx, hy), (tx, ty)) =>
   hx == tx && hy == ty;
 
-let part1 =
-  applyMoves(startingPosition)
-  >> getTailVisited
+let part1 = (debug, moves) =>
+  moves
+  |> applyMoves(startingPositionPart1, debug)
+  |> getTailVisited
   // >> List.distinctBy(positionEq)
-  >> Position.Set.toArray
+  |> Position.Set.toArray
   // >> List.toArray
-  >> Array.length;
+  |> Array.length;
 
-let run = (_description, part, data) =>
+let startingPositionPart2 = {
+  head: (0,0),
+  // tail: [(0,0)],
+  tail: List.repeat(2, (0,0)),
+  tailVisited:
+    Position.Set.empty
+    |> Position.Set.add((0, 0))
+  // tailVisited: [(0, 0)]
+};
+
+let part2 = (debug, moves) =>
+  moves
+  |> applyMoves(startingPositionPart2, debug)
+  |> getTailVisited
+  // >> List.distinctBy(positionEq)
+  |> Position.Set.toArray
+  // >> List.toArray
+  |> Array.length;
+
+let run = (_description, part, debug, data) =>
   data
   |> String.splitList(~delimiter="\n")
   |> List.map(
@@ -236,33 +312,17 @@ let run = (_description, part, data) =>
   // |> applyMoves(startingPosition)
   // |> determineGridSize
   // |> List.toArray
-  |> part
+  |> part(debug)
   // |> Js.log;
   |> Int.toString
   |> Shared.Log.logWithDescription(_description);
 
 
 Shared.File.read("data/2022/day09test.txt")
-|> run("Part 1 Test  ", part1);
+|> run("Part 1 Test  ", part1, true);
 
 Shared.File.read("data/2022/day09.txt")
-|> run("Part 1 Result", part1);
-
-
-// module type Position = {
-//   type t;
-
-//   module Set: Set.SET with type value = t;
-// };
-
-// module type PositionFromTuple = {
-//   type t;
-//   let fromCoords 
-// }
-
-Position.Set.empty
-|> Position.Set.add((0, 0))
-|> Js.log;
+|> run("Part 1 Result", part1, false);
 
 // // let test = Set.
 // module MakePosition = ()
@@ -298,8 +358,8 @@ Part 1 Test   : 13
 Part 1 Result : 6011
 */
 
-// Shared.File.read("data/2022/day09test.txt")
-// |> run("Part 2 Test  ", part2);
+Shared.File.read("data/2022/day09test.txt")
+|> run("Part 2 Test  ", part2, false);
 
 // Shared.File.read("data/2022/day09.txt")
 // |> run("Part 2 Result", part2);
