@@ -1,19 +1,9 @@
 // Part 1
-
 let getGridDimensions = (grid: array(array(int))) =>
   (
+    grid |> Array.head |> Option.getOrThrow |> Array.length,
     grid |> Array.length,
-    grid |> Array.head |> Option.getOrThrow |> Array.length
   );
-
-let testGrid =
-  [|
-    [| (0,0), (1,0), (2,0), (3,0), (4,0) |],
-    [| (0,1), (1,1), (2,1), (3,1), (4,1) |],
-    [| (0,2), (1,2), (2,2), (3,2), (4,2) |],
-    [| (0,3), (1,3), (2,3), (3,3), (4,3) |],
-    [| (0,4), (1,4), (2,4), (3,4), (4,4) |],
-  |];
 
 let getItemAt = (x, y, grid) =>
   grid
@@ -38,34 +28,27 @@ let getItemsDirection = (fx, fy, switchOn, bailOn, x, y, grid) => {
   |> List.toArray
 };
 
-let getItemsAbove = getItemsDirection(id, (-)(_, 1), Tuple.second);
-let getItemsBelow = getItemsDirection(id, (+)(_, 1), Tuple.second);
-let getItemsLeft = getItemsDirection((-)(_, 1), id, Tuple.first);
-let getItemsRight = getItemsDirection((+)(1), id, Tuple.first);
+let sub1 = (-)(_, 1);
+let add1 = (+)(1);
 
-let arrayMax = Array.length >> (-)(_, 1);
+let getItemsAbove = getItemsDirection(id, sub1, Tuple.second);
+let getItemsBelow = getItemsDirection(id, add1, Tuple.second);
+let getItemsLeft = getItemsDirection(sub1, id, Tuple.first);
+let getItemsRight = getItemsDirection(add1, id, Tuple.first);
+
+// let arrayMax = Array.length >> sub1;
+let getLen = side =>
+  getGridDimensions
+  >> side
+  >> sub1;
 
 let getAllRelevantItems = (x, y, grid) =>
   [|
     getItemsAbove(0, x, y, grid),
-    getItemsBelow(grid |> arrayMax, x, y, grid),
+    getItemsBelow(grid |> getLen(Tuple.second), x, y, grid),
     getItemsLeft(0, x, y, grid),
-    getItemsRight(grid |> arrayMax, x, y, grid)
-  |]
-
-/*
-testGrid
-|> getAllRelevantItems(3, 3)
-|> Js.log;
-
-$ node _build/default/src/2022/Day08.bs.js
-[
-  [ [ 3, 2 ], [ 3, 1 ], [ 3, 0 ] ],
-  [ [ 3, 4 ] ],
-  [ [ 2, 3 ], [ 1, 3 ], [ 0, 3 ] ],
-  [ [ 4, 3 ] ]
-]
-*/
+    getItemsRight(grid |> getLen(Tuple.first), x, y, grid)
+  |];
 
 let isSpotVisible = (x, y, grid) => {
   let treeToExamine = grid |> getItemAt(x, y);
@@ -79,11 +62,11 @@ let isSpotVisible = (x, y, grid) => {
 };
   
 let part1 = grid => {
-  let len = grid |> Array.length;
+  let (lenX, lenY) = grid |> getGridDimensions;
 
-  Int.rangeAsArray(0, len)
+  Int.rangeAsArray(0, lenX)
   |> Array.map(x =>
-    Int.rangeAsArray(0, len)
+    Int.rangeAsArray(0, lenY)
     |> Array.map(y =>
       grid |> isSpotVisible(x, y)
     )
@@ -91,41 +74,6 @@ let part1 = grid => {
   )
   |> Array.Int.sum // comment out both Array.Int.sum lines to see grid
 };
-/* 0 = not visible, 1 = visible
-$ node _build/default/src/2022/Day08.bs.js
-[
-  [ 1, 1, 1, 1, 1 ],
-  [ 1, 1, 1, 0, 1 ],
-  [ 1, 1, 0, 1, 1 ],
-  [ 1, 0, 1, 0, 1 ],
-  [ 1, 1, 1, 1, 1 ]
-]
-*/
-
-/*
-let part1 = (x, y, grid) =>
-  (
-    grid |> getItemAt(x, y),
-    grid |> getAllRelevantItems(x, y),
-    grid |> isSpotVisible(x, y)
-  );
-
-// Position: (1, 1)
-$ node _build/default/src/2022/Day08.bs.js
-[
-  5,                                          // height of tree in question
-  [ [ 0 ], [ 5, 3, 5 ], [ 2 ], [ 5, 1, 2 ] ], // height of trees above/below/left/right (each as their own array)
-  [ true, false, true, false ]                // is tree visible above/below/left/right
-]
-// Position: (3, 1)
-$ node _build/default/src/2022/Day08.bs.js
-[
-  1,
-  [ [ 7 ], [ 3, 4, 9 ], [ 5, 5, 2 ], [ 2 ] ],
-  [ false, false, false, false ]
-]
-*/
-
 
 // Part 2
 
@@ -142,7 +90,6 @@ let run = (description, partSpecificStuff, data) =>
   |> partSpecificStuff
   |> Int.toString
   |> Shared.Log.logWithDescription(description);
-  // |> Js.log;
 
 Shared.File.read("data/2022/day08test.txt")
 |> run("Part 1 Test  ", part1);
