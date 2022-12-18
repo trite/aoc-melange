@@ -8,11 +8,6 @@ let getGridDimensions = (grid: array(array(int))) =>
 
 let testGrid =
   [|
-    // [| (0,0), (0,1), (0,2), (0,3), (0,4) |],
-    // [| (1,0), (1,1), (1,2), (1,3), (1,4) |],
-    // [| (2,0), (2,1), (2,2), (2,3), (2,4) |],
-    // [| (3,0), (3,1), (3,2), (3,3), (3,4) |],
-    // [| (4,0), (4,1), (4,2), (4,3), (4,4) |],
     [| (0,0), (1,0), (2,0), (3,0), (4,0) |],
     [| (0,1), (1,1), (2,1), (3,1), (4,1) |],
     [| (0,2), (1,2), (2,2), (3,2), (4,2) |],
@@ -27,13 +22,6 @@ let getItemAt = (x, y, grid) =>
   |> fun
      | None => raise(Failure({j|Failed to find element at ($x, $y) \n $grid|j}))
      | Some(x) => x;
-  // |> Option.getOrThrow;
-  // |> Option.getOrElse(raise(Failure({j|Failed to find element at ($x, $y) \n $grid|j})));
-
-// let rec getItemsAbove = (x, y, grid) =>
-//   y == 0
-//   ? []
-//   : [grid |> getItemAt(x, y), ...(grid |> getItemsAbove(x, y-1))];
 
 let getItemsDirection = (fx, fy, switchOn, bailOn, x, y, grid) => {
   let rec go = (x, y, grid) => {
@@ -54,20 +42,6 @@ let getItemsAbove = getItemsDirection(id, (-)(_, 1), Tuple.second);
 let getItemsBelow = getItemsDirection(id, (+)(_, 1), Tuple.second);
 let getItemsLeft = getItemsDirection((-)(_, 1), id, Tuple.first);
 let getItemsRight = getItemsDirection((+)(1), id, Tuple.first);
-
-// let getItemsAbove = (x, y, grid) => {
-//   let rec go = (x, y, grid) => {
-//     switch(y) {
-//     | 0 => [grid |> getItemAt(x, y)]
-//     | _ => [grid |> getItemAt(x, y), ...(grid |> go(x, y-1))]
-//     }
-//   }
-
-//   switch(x) {
-//   | 0 => []
-//   | _ => go(x, y-1, grid)
-//   }
-// };
 
 let arrayMax = Array.length >> (-)(_, 1);
 
@@ -93,35 +67,88 @@ $ node _build/default/src/2022/Day08.bs.js
 ]
 */
 
+let isSpotVisible = (x, y, grid) => {
+  let treeToExamine = grid |> getItemAt(x, y);
 
-// let isSpotVisible = ((x: int, y: int) grid: array(array(int))): bool =>
+  grid
+  |> getAllRelevantItems(x, y)
+  |> Array.map(toCompare => toCompare |> Array.all(i => i < treeToExamine))
+  |> Array.any(id)
+  ? 1
+  : 0
+};
   
-  
-  
-  
-// let _part1 = getItemAt(3, 1);
+let part1 = grid => {
+  let len = grid |> Array.length;
+
+  Int.rangeAsArray(0, len)
+  |> Array.map(x =>
+    Int.rangeAsArray(0, len)
+    |> Array.map(y =>
+      grid |> isSpotVisible(x, y)
+    )
+    |> Array.Int.sum // comment out both Array.Int.sum lines to see grid
+  )
+  |> Array.Int.sum // comment out both Array.Int.sum lines to see grid
+};
+/* 0 = not visible, 1 = visible
+$ node _build/default/src/2022/Day08.bs.js
+[
+  [ 1, 1, 1, 1, 1 ],
+  [ 1, 1, 1, 0, 1 ],
+  [ 1, 1, 0, 1, 1 ],
+  [ 1, 0, 1, 0, 1 ],
+  [ 1, 1, 1, 1, 1 ]
+]
+*/
+
+/*
+let part1 = (x, y, grid) =>
+  (
+    grid |> getItemAt(x, y),
+    grid |> getAllRelevantItems(x, y),
+    grid |> isSpotVisible(x, y)
+  );
+
+// Position: (1, 1)
+$ node _build/default/src/2022/Day08.bs.js
+[
+  5,                                          // height of tree in question
+  [ [ 0 ], [ 5, 3, 5 ], [ 2 ], [ 5, 1, 2 ] ], // height of trees above/below/left/right (each as their own array)
+  [ true, false, true, false ]                // is tree visible above/below/left/right
+]
+// Position: (3, 1)
+$ node _build/default/src/2022/Day08.bs.js
+[
+  1,
+  [ [ 7 ], [ 3, 4, 9 ], [ 5, 5, 2 ], [ 2 ] ],
+  [ false, false, false, false ]
+]
+*/
+
 
 // Part 2
 
 // Program boundry IO
 
-// let _run = (_description, partSpecificStuff, data) =>
-//   data
-//   |> String.splitArray(~delimiter="\n")
-//   |> Array.map(
-//     String.splitArray(~delimiter="")
-//     >> Array.map(
-//       String.toInt
-//       >> Option.getOrThrow))
-//   |> partSpecificStuff
-//   |> ignore;
-//   // |> Js.log;
+let run = (description, partSpecificStuff, data) =>
+  data
+  |> String.splitArray(~delimiter="\n")
+  |> Array.map(
+    String.splitArray(~delimiter="")
+    >> Array.map(
+      String.toInt
+      >> Option.getOrThrow))
+  |> partSpecificStuff
+  |> Int.toString
+  |> Shared.Log.logWithDescription(description);
+  // |> Js.log;
 
-// Shared.File.read("data/2022/day08test.txt")
-// |> run("Part 1 Test  ", part1);
+Shared.File.read("data/2022/day08test.txt")
+|> run("Part 1 Test  ", part1);
 
-// Shared.File.read("data/2022/day08.txt")
-// |> doWork("Part 1 Result", part1);
+Shared.File.read("data/2022/day08.txt")
+|> run("Part 1 Result", part1);
 
 // Shared.File.read("data/2022/day08test.txt")
 // |> doWork("Part 2 Test  ", part2);
