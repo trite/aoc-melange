@@ -13,30 +13,28 @@ let getItemAt = (x, y, grid) =>
      | None => raise(Failure({j|Failed to find element at ($x, $y) \n $grid|j}))
      | Some(x) => x;
 
-let getItemsDirection = (fx, fy, switchOn, bailOn, x, y, grid) => {
-  let rec go = (x, y, grid) => {
-    switch((x, y) |> switchOn) {
-    | _discard when _discard == bailOn => [grid |> getItemAt(x, y)]
-    | _ => [grid |> getItemAt(x, y), ...(grid |> go(fx(x), fy(y)))]
-    }
-  }
+let getItemsDirection = (~fx, ~fy, ~switchOn, ~bailOn, x, y, grid) => {
+  let rec go = (x, y, grid) => 
+    (x, y) |> switchOn == bailOn
+    ? [grid |> getItemAt(x, y)]
+    : [grid |> getItemAt(x, y), ...(grid |> go(fx(x), fy(y)))];
 
-  switch((x, y) |> switchOn) {
-  | _discard when _discard == bailOn => []
-  | _ => go(fx(x), fy(y), grid)
-  }
+  (
+    (x, y) |> switchOn == bailOn
+    ? []
+    : go(fx(x), fy(y), grid)
+  )
   |> List.toArray
 };
 
 let sub1 = (-)(_, 1);
 let add1 = (+)(1);
 
-let getItemsAbove = getItemsDirection(id, sub1, Tuple.second);
-let getItemsBelow = getItemsDirection(id, add1, Tuple.second);
-let getItemsLeft = getItemsDirection(sub1, id, Tuple.first);
-let getItemsRight = getItemsDirection(add1, id, Tuple.first);
+let getItemsAbove = getItemsDirection(~fx=id, ~fy=sub1, ~switchOn=Tuple.second);
+let getItemsBelow = getItemsDirection(~fx=id, ~fy=add1, ~switchOn=Tuple.second);
+let getItemsLeft = getItemsDirection(~fx=sub1, ~fy=id, ~switchOn=Tuple.first);
+let getItemsRight = getItemsDirection(~fx=add1, ~fy=id, ~switchOn=Tuple.first);
 
-// let arrayMax = Array.length >> sub1;
 let getLen = side =>
   getGridDimensions
   >> side
@@ -44,10 +42,10 @@ let getLen = side =>
 
 let getAllRelevantItems = (x, y, grid) =>
   [|
-    getItemsAbove(0, x, y, grid),
-    getItemsBelow(grid |> getLen(Tuple.second), x, y, grid),
-    getItemsLeft(0, x, y, grid),
-    getItemsRight(grid |> getLen(Tuple.first), x, y, grid)
+    getItemsAbove(~bailOn=0, x, y, grid),
+    getItemsBelow(~bailOn=grid |> getLen(Tuple.second), x, y, grid),
+    getItemsLeft(~bailOn=0, x, y, grid),
+    getItemsRight(~bailOn=grid |> getLen(Tuple.first), x, y, grid)
   |];
 
 let isSpotVisible = (x, y, grid) => {
