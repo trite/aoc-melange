@@ -32,7 +32,8 @@ let getItemsDirection = (~fx, ~fy, ~switchOn, ~bailOn, x, y, grid) => {
   |> List.toArray
 };
 
-let sub1 = (-)(_, 1);
+// let sub1 = (-)(_, 1);
+let sub1 = (+)(-1);
 let add1 = (+)(1);
 
 let getLen = side =>
@@ -115,9 +116,9 @@ let calculateScenicScore = (x, y, grid) => {
 let mapGrid = (toMap, followUp, grid) => {
   let (lenX, lenY) = grid |> getGridDimensions;
 
-  Int.rangeAsArray(0, lenX)
+  Int.rangeAsArray(0, lenY)
   |> Array.map(x =>
-    Int.rangeAsArray(0, lenY)
+    Int.rangeAsArray(0, lenX)
     |> Array.map(y =>
       grid |> toMap(x, y)
     )
