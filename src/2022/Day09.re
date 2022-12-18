@@ -81,8 +81,8 @@ let makeTestGridOfSize = (x, y) =>
   //   ));
   // Array.repeat
 
-makeTestGridOfSize(5,6)
-|> Js.log;
+// makeTestGridOfSize(5,6)
+// |> Js.log;
 
 type position = (int, int);
 
@@ -111,73 +111,56 @@ let applyMoveIncrement = ({head, tail, tailVisited}: positionInfo, move: move) =
 
   let moveIfNeeded = ((hx, hy), (tx, ty)) => {
     switch(hx - tx, hy - ty) {
-    | (0, 0) => (tx, ty)    // same spot, don't move
-    | (0, -1) => (tx, ty)   // down but don't move
-    | (0, -2) => (tx, ty-1) // down
-    | (0, 1) => (tx, ty)    // up but don't move
-    | (0, 2) => (tx, ty+1)  // up
-    | (-1, 0) => (tx, ty)   // left don't move
-    | (-2, 0) => (tx-1, ty) // left
-    | (1, 0) => (tx, ty)    // right don't move
-    | (2, 0) => (tx+1, ty)  // right
-    | (-1, -1) => (tx, ty)                // lower-left don't move
+    // No movement
+    | (0, 0)                              // same spot
+    | (0, -1)                             // down
+    | (0, 1)                              // up
+    | (-1, 0)                             // left
+    | (1, 0)                              // right
+    | (-1, -1)                            // lower-left
+    | (-1, 1)                             // upper-left
+    | (1, -1)                             // lower-right
+    | (1, 1) => (tx, ty)                  // upper-right
+
+    // Causes movement
+    | (0, -2) => (tx, ty-1)               // down
+    | (0, 2) => (tx, ty+1)                // up
+    | (-2, 0) => (tx-1, ty)               // left
+    | (2, 0) => (tx+1, ty)                // right
     | (-1, -2) | (-2, -1) => (tx-1, ty-1) // lower-left
-    | (-1, 1) => (tx, ty)                 // upper-left don't move
     | (-1, 2) | (-2, 1) => (tx-1, ty+1)   // upper-left
-    | (1, -1) => (tx, ty)                 // lower-right don't move
     | (1, -2) | (2, -1) => (tx+1, ty-1)   // lower-right
-    | (1, 1) => (tx, ty)                  // upper-right don't move
     | (1, 2) | (2, 1) => (tx+1, ty+1)     // upper-right
+
+    // OH NOES
     | _ => raise(
       Failure({j|
         This shouldn't be possible!
         (hx, hy), (tx, ty)
         ($hx, $hy), ($tx, $ty)
       |j}))
-    // | (-2, -1) | (-1, -2) => (tx-1, ty-1)
-    // | (2, -1) | (1, -2) => (tx+1, ty-1)
     }
-    // let go = (h, t) =>
-    //   switch(h - t) {
-    //   | -1 | 0 | 1 => t
-    //   | -2 => t - 1
-    //   | 2 => t + 1
-    //   | _ => raise(Failure({j|
-    //     Head/tail more than 2 steps apart, this shouldn't happen!
-    //     (hx, hy), (tx, ty)
-    //     ($hx, $hy), ($tx, $ty)
-    //     |j}))
-    //   };
-
-    // let newX = go(hx, tx);
-
-    // let newY = go(hy, ty);
-
-    // (newX, newY)
   };
 
   let (newHead, restOfMove) = head |> applyMove(move);
 
   let newTail = tail |> moveIfNeeded(newHead);
 
-  let calcDists = ((dx, dy), (sx, sy)) =>
-    (dx - sx, dy - sy);
-
-  // let (distHead, distTail) = ()
-  let distHead = calcDists(newHead, head);
-  let distTail = calcDists(newTail, tail);
-
-  Js.log({j|
-    ----
-    (($head), ($tail)) => (($newHead), ($newTail))
-    ($distHead, $distTail)
-  |j});
+  // Debug movements
+  // let calcDists = ((dx, dy), (sx, sy)) =>
+  //   (dx - sx, dy - sy);
+  // let distHead = calcDists(newHead, head);
+  // let distTail = calcDists(newTail, tail);
+  // Js.log({j|
+  //   ----
+  //   (($head), ($tail)) => (($newHead), ($newTail))
+  //   ($distHead, $distTail)
+  // |j});
 
   (
     {
       head: newHead,
       tail: newTail,
-      // tailVisited: tailVisited |> Set.add(newTail)
       tailVisited: newTail ^:: tailVisited
     },
     restOfMove
@@ -223,15 +206,22 @@ let run = (_description, part, data) =>
   // |> determineGridSize
   // |> List.toArray
   |> part
-  |> Js.log;
-  // |> Shared.Log.logWithDescription(_description);
+  // |> Js.log;
+  |> Int.toString
+  |> Shared.Log.logWithDescription(_description);
 
 
 Shared.File.read("data/2022/day09test.txt")
 |> run("Part 1 Test  ", part1);
 
-// Shared.File.read("data/2022/day09.txt")
-// |> run("Part 1 Result", part1);
+Shared.File.read("data/2022/day09.txt")
+|> run("Part 1 Result", part1);
+
+/*
+$ node _build/default/src/2022/Day09.bs.js
+Part 1 Test   : 13
+Part 1 Result : 6011
+*/
 
 // Shared.File.read("data/2022/day09test.txt")
 // |> run("Part 2 Test  ", part2);
