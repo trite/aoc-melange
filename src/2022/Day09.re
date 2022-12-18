@@ -1,6 +1,8 @@
 let mapRight = (f, (x, y)) =>
   (x, y |> f);
 
+let (^::) = List.cons;
+
 type move =
   | Up(int)
   | Down(int)
@@ -30,6 +32,39 @@ let makeGridOfSize = (x, y, f) =>
     |> Array.map(x =>
       f(x, y)
     ));
+
+let determineGridSize = moves => {
+  let startingPosition = (0, 0, 0, 0, 0, 0);
+  // let startingPosition = (0, 0, 0, 0);
+
+  let applyMove = ((startX, startY, maxX, maxY, minX, minY), move) =>
+    switch(move) {
+    | Up(y) => (startX, startY + y, maxX, Int.max(maxY, startY + y), minX, Int.min(minY, startY + y))
+    | Down(y) => (startX, startY - y, maxX, Int.max(maxY, startY - y), minX, Int.min(minY, startY - y))
+    | Left(x) => (startX - x, startY, Int.max(maxX, startX - x), maxY, Int.min(minX, startX - x), minY)
+    | Right(x) => (startX + x, startY, Int.max(maxX, startX + x), maxY, Int.min(minX, startX + x), minY)
+    };
+
+  // let applyMove = ((startX, startY, maxX, maxY), move) =>
+  //   switch(move) {
+  //   | Up(y) => (startX, startY + y, maxX, Int.max(maxY, startY + y))
+  //   | Down(y) => (startX, startY - y, maxX, Int.max(maxY, startY - y))
+  //   | Left(x) => (startX - x, startY, Int.max(maxX, startX - x), maxY)
+  //   | Right(x) => (startX + x, startY, Int.max(maxX, startX + x), maxY)
+  //   };
+
+  let applyMoves = (moves, position) =>
+    List.foldLeft(applyMove, position, moves);
+
+  applyMoves(moves, startingPosition)
+  |> ((_, _, x, y, a, b)) => (x, y, a, b)
+  // |> ((_, _, x, y)) => (x, y)
+};
+
+/* grid sizes using above:
+Test   : [ 5, 4, 0, 0 ]
+Actual : [ 300, 166, -55, -51 ]
+*/
 
 let makeEmptyGridOfSize = (x, y) =>
   makeGridOfSize(x, y, (_, _) => false);
@@ -62,7 +97,8 @@ let run = (_description, part, data) =>
     >> parseMove
     // >> formatMove
   )
-  |> List.toArray
+  |> determineGridSize
+  // |> List.toArray
   |> part
   |> Js.log;
   // |> Shared.Log.logWithDescription(_description);
@@ -71,8 +107,8 @@ let run = (_description, part, data) =>
 Shared.File.read("data/2022/day09test.txt")
 |> run("Part 1 Test  ", part1);
 
-// Shared.File.read("data/2022/day09.txt")
-// |> run("Part 1 Result", part1);
+Shared.File.read("data/2022/day09.txt")
+|> run("Part 1 Result", part1);
 
 // Shared.File.read("data/2022/day09test.txt")
 // |> run("Part 2 Test  ", part2);
