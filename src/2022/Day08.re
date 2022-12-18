@@ -1,4 +1,3 @@
-// Part 1
 let getGridDimensions = (grid: array(array(int))) =>
   (
     grid |> Array.head |> Option.getOrThrow |> Array.length,
@@ -53,39 +52,109 @@ let isSpotVisible = (x, y, grid) => {
 
   grid
   |> getAllRelevantItems(x, y)
-  |> Array.map(toCompare => toCompare |> Array.all(i => i < treeToExamine))
+  |> Array.map(Array.all(i => i < treeToExamine))
   |> Array.any(id)
   ? 1
   : 0
 };
   
-let part1 = grid => {
+// let part1 = grid => {
+//   let (lenX, lenY) = grid |> getGridDimensions;
+
+//   Int.rangeAsArray(0, lenX)
+//   |> Array.map(x =>
+//     Int.rangeAsArray(0, lenY)
+//     |> Array.map(y =>
+//       grid |> isSpotVisible(x, y)
+//     )
+//     |> Array.Int.sum // comment out both Array.Int.sum lines to see grid
+//   )
+//   |> Array.Int.sum // comment out both Array.Int.sum lines to see grid
+// };
+
+let calculateScenicScore = (x, y, grid) => {
+  let treeToExamine = grid |> getItemAt(x, y);
+
+  // let rec go = (x, y, grid) => 
+  //   switch(grid |> )
+  //   | i when i >= treeToExamine => [i]
+  //   | i => [i, ...go(x, y, )]
+    
+  let rec doTheThing = (lst) => {
+    switch(lst |> List.head) {
+    | None => []
+    | Some(i) when i >= treeToExamine => [i]
+    | Some(i) => [i, ...doTheThing(lst |> List.tailOrEmpty)]
+    }
+  };
+  
+  grid
+  |> getAllRelevantItems(x, y)
+  |> Array.map(arr =>
+    arr
+    |> Array.toList
+    |> doTheThing
+    |> List.length
+  )
+  |> Array.Int.product
+};
+
+// let part2 = grid => {
+//   let (lenX, lenY) = grid |> getGridDimensions;
+
+//   Int.rangeAsArray(0, lenX)
+//   |> Array.map(x =>
+//     Int.rangeAsArray(0, lenY)
+//     |> Array.map(y =>
+//       grid |> calculateScenicScore(x, y)
+//     )
+//     |> Array.Int.sum // comment out both Array.Int.sum lines to see grid
+//   )
+//   |> Array.Int.sum // comment out both Array.Int.sum lines to see grid
+// };
+
+/*
+let part2 = grid => {
+  calculateScenicScore(2, 2, grid)
+  |> Js.log;
+
+  -1
+};
+$ node _build/default/src/2022/Day08.bs.js
+Part 1 Test   : 21
+Part 1 Result : 1560
+// order matches how each row would look to the observer from the tree at (2,2)
+[ [ 5, 3 ], [ 5, 3 ], [ 5, 6 ], [ 3, 2 ] ] 
+Part 2 Test   : -1
+*/
+
+// TODO: Figure out a better way to organize this
+//       The (toMap, followUp) tuple being passed all over the place feels like an anti-pattern
+let mapGrid = ((toMap, followUp), grid) => {
   let (lenX, lenY) = grid |> getGridDimensions;
 
   Int.rangeAsArray(0, lenX)
   |> Array.map(x =>
     Int.rangeAsArray(0, lenY)
     |> Array.map(y =>
-      grid |> isSpotVisible(x, y)
+      grid |> toMap(x, y)
     )
-    |> Array.Int.sum // comment out both Array.Int.sum lines to see grid
+    |> followUp
   )
-  |> Array.Int.sum // comment out both Array.Int.sum lines to see grid
+  |> followUp
 };
 
-// Part 2
+let part1 = (isSpotVisible, Array.Int.sum);
 
-// Program boundry IO
+let part2 = (calculateScenicScore, Array.Int.max >> Option.getOrThrow);
 
-let run = (description, partSpecificStuff, data) =>
+let run = (description, part, data) =>
   data
   |> String.splitArray(~delimiter="\n")
   |> Array.map(
     String.splitArray(~delimiter="")
-    >> Array.map(
-      String.toInt
-      >> Option.getOrThrow))
-  |> partSpecificStuff
+    >> Array.map(String.toInt >> Option.getOrThrow))
+  |> mapGrid(part)
   |> Int.toString
   |> Shared.Log.logWithDescription(description);
 
@@ -95,8 +164,16 @@ Shared.File.read("data/2022/day08test.txt")
 Shared.File.read("data/2022/day08.txt")
 |> run("Part 1 Result", part1);
 
-// Shared.File.read("data/2022/day08test.txt")
-// |> doWork("Part 2 Test  ", part2);
+Shared.File.read("data/2022/day08test.txt")
+|> run("Part 2 Test  ", part2);
 
-// Shared.File.read("data/2022/day08.txt")
-// |> doWork("Part 2 Result", part2);
+Shared.File.read("data/2022/day08.txt")
+|> run("Part 2 Result", part2);
+
+/*
+$ node _build/default/src/2022/Day08.bs.js
+Part 1 Test   : 21
+Part 1 Result : 1560
+Part 2 Test   : 8
+Part 2 Result : 252000
+*/
