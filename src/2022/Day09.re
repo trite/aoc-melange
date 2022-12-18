@@ -1,3 +1,25 @@
+module Position = {
+  type t = (int, int);
+
+  let compare = ((x1, y1), (x2, y2)) =>
+    switch(x2 - x1, y2 - y1) {
+    | (0, 0) => `equal_to
+    | (x, y) when x > 0 || y > 0 => `greater_than
+    | (x, y) when x < 0 || y < 0 => `less_than
+    | _ => raise(Failure("Hmm..."))
+    };
+
+  let eq = ((x1, y1), (x2, y2)) =>
+    x1 == x2 && y1 == y2;
+
+  module Ord = {
+    type nonrec t = t;
+    let compare = compare;
+    let eq = eq;
+  }
+  module Set = Set.WithOrd(Ord);
+};
+
 let mapRight = (f, (x, y)) =>
   (x, y |> f);
 
@@ -84,7 +106,8 @@ let makeTestGridOfSize = (x, y) =>
 // makeTestGridOfSize(5,6)
 // |> Js.log;
 
-type position = (int, int);
+// type position = (int, int);
+type position = Position.t;
 
 type positionInfo = {
   head: position,
@@ -183,14 +206,18 @@ let startingPosition = {
   tailVisited: [(0, 0)]
 };
 
-let part1 = ({head: _, tail: _, tailVisited}) =>
-  tailVisited
-  |> List.distinctBy(((hx, hy), (tx, ty)) => hx == tx && hy == ty)
-  |> List.toArray
-  |> Array.length
-  // |> List.length
-  // |> List.distinctBy(Tuple.EqBy2(Int.eq, Int.eq))
-;
+let getTailVisited = ({head: _, tail: _, tailVisited}) =>
+  tailVisited;
+
+let positionEq = ((hx, hy), (tx, ty)) =>
+  hx == tx && hy == ty;
+
+let part1 =
+  applyMoves(startingPosition)
+  >> getTailVisited
+  >> List.distinctBy(positionEq)
+  >> List.toArray
+  >> Array.length;
 
 let run = (_description, part, data) =>
   data
@@ -202,7 +229,7 @@ let run = (_description, part, data) =>
     >> parseMove
     // >> formatMove
   )
-  |> applyMoves(startingPosition)
+  // |> applyMoves(startingPosition)
   // |> determineGridSize
   // |> List.toArray
   |> part
@@ -216,6 +243,50 @@ Shared.File.read("data/2022/day09test.txt")
 
 Shared.File.read("data/2022/day09.txt")
 |> run("Part 1 Result", part1);
+
+
+// module type Position = {
+//   type t;
+
+//   module Set: Set.SET with type value = t;
+// };
+
+// module type PositionFromTuple = {
+//   type t;
+//   let fromCoords 
+// }
+
+Position.Set.empty
+|> Position.Set.add((0, 0))
+|> Js.log;
+
+// // let test = Set.
+// module MakePosition = ()
+  
+  // Belt.Id.MakeComparable({
+  //   type t = position;
+  //   let compare = ((x1, y1), (x2, y2)) =>
+  //     switch(Int.compare(x1, x2)) {
+  //     | `equal_to => Int.compare(y1, y2)
+  //     | other => other
+  //     }
+  //     // switch(Pervasives.compare(x1, x2)) {
+  //     // | 0 => Pervasives.compare(y1, y2)
+  //     // | c => c
+  //     // }
+  // })
+  // Relude.Identity.MakeComparable({
+  //   type t = position;
+  //   let compare = ((x1, y1), (x2, y2)) =>
+  //     switch(Int.compare(x1, x2)) {
+  //     | `equal_to => Int.compare(y1, y2)
+  //     | other => other
+  //     }
+  //     // switch(Pervasives.compare(x1, x2)) {
+  //     // | 0 => Pervasives.compare(y1, y2)
+  //     // | c => c
+  //     // }
+  // });
 
 /*
 $ node _build/default/src/2022/Day09.bs.js
