@@ -12,6 +12,12 @@ let getItemAt = (x, y, grid) =>
      | None => raise(Failure({j|Failed to find element at ($x, $y) \n $grid|j}))
      | Some(x) => x;
 
+/***
+  ~fx: increment/decrement/identity func to apply to the x value when needed
+  ~fy: equivalent func for the y value (identity for ignored side)
+  ~switchOn: run the (x,y) tuple through this to decide which one to switch on
+  ~bailOn: compare to x or y in the switch statement
+ */
 let getItemsDirection = (~fx, ~fy, ~switchOn, ~bailOn, x, y, grid) => {
   let rec go = (x, y, grid) => 
     (x, y) |> switchOn == bailOn
@@ -29,22 +35,48 @@ let getItemsDirection = (~fx, ~fy, ~switchOn, ~bailOn, x, y, grid) => {
 let sub1 = (-)(_, 1);
 let add1 = (+)(1);
 
-let getItemsAbove = getItemsDirection(~fx=id, ~fy=sub1, ~switchOn=Tuple.second);
-let getItemsBelow = getItemsDirection(~fx=id, ~fy=add1, ~switchOn=Tuple.second);
-let getItemsLeft = getItemsDirection(~fx=sub1, ~fy=id, ~switchOn=Tuple.first);
-let getItemsRight = getItemsDirection(~fx=add1, ~fy=id, ~switchOn=Tuple.first);
-
 let getLen = side =>
   getGridDimensions
   >> side
   >> sub1;
 
+// TODO: review later - good use of currying or no?
+let getItemsAbove =
+  getItemsDirection(
+    ~fx=id,
+    ~fy=sub1,
+    ~switchOn=Tuple.second,
+    ~bailOn=0);
+
+let getItemsBelow = (x, y, grid) =>
+  getItemsDirection(
+    ~fx=id,
+    ~fy=add1,
+    ~switchOn=Tuple.second,
+    ~bailOn=(grid |> getLen(Tuple.second)),
+    x, y, grid);
+
+let getItemsLeft =
+  getItemsDirection(
+    ~fx=sub1,
+    ~fy=id,
+    ~switchOn=Tuple.first,
+    ~bailOn=0);
+
+let getItemsRight = (x, y, grid) =>
+  getItemsDirection(
+    ~fx=add1, 
+    ~fy=id, 
+    ~switchOn=Tuple.first,
+    ~bailOn=(grid |> getLen(Tuple.first)),
+    x, y, grid);
+
 let getAllRelevantItems = (x, y, grid) =>
   [|
-    getItemsAbove(~bailOn=0, x, y, grid),
-    getItemsBelow(~bailOn=grid |> getLen(Tuple.second), x, y, grid),
-    getItemsLeft(~bailOn=0, x, y, grid),
-    getItemsRight(~bailOn=grid |> getLen(Tuple.first), x, y, grid)
+    getItemsAbove(x, y, grid),
+    getItemsBelow(x, y, grid),
+    getItemsLeft(x, y, grid),
+    getItemsRight(x, y, grid)
   |];
 
 let isSpotVisible = (x, y, grid) => {
@@ -57,28 +89,9 @@ let isSpotVisible = (x, y, grid) => {
   ? 1
   : 0
 };
-  
-// let part1 = grid => {
-//   let (lenX, lenY) = grid |> getGridDimensions;
-
-//   Int.rangeAsArray(0, lenX)
-//   |> Array.map(x =>
-//     Int.rangeAsArray(0, lenY)
-//     |> Array.map(y =>
-//       grid |> isSpotVisible(x, y)
-//     )
-//     |> Array.Int.sum // comment out both Array.Int.sum lines to see grid
-//   )
-//   |> Array.Int.sum // comment out both Array.Int.sum lines to see grid
-// };
 
 let calculateScenicScore = (x, y, grid) => {
   let treeToExamine = grid |> getItemAt(x, y);
-
-  // let rec go = (x, y, grid) => 
-  //   switch(grid |> )
-  //   | i when i >= treeToExamine => [i]
-  //   | i => [i, ...go(x, y, )]
     
   let rec doTheThing = (lst) => {
     switch(lst |> List.head) {
@@ -99,38 +112,7 @@ let calculateScenicScore = (x, y, grid) => {
   |> Array.Int.product
 };
 
-// let part2 = grid => {
-//   let (lenX, lenY) = grid |> getGridDimensions;
-
-//   Int.rangeAsArray(0, lenX)
-//   |> Array.map(x =>
-//     Int.rangeAsArray(0, lenY)
-//     |> Array.map(y =>
-//       grid |> calculateScenicScore(x, y)
-//     )
-//     |> Array.Int.sum // comment out both Array.Int.sum lines to see grid
-//   )
-//   |> Array.Int.sum // comment out both Array.Int.sum lines to see grid
-// };
-
-/*
-let part2 = grid => {
-  calculateScenicScore(2, 2, grid)
-  |> Js.log;
-
-  -1
-};
-$ node _build/default/src/2022/Day08.bs.js
-Part 1 Test   : 21
-Part 1 Result : 1560
-// order matches how each row would look to the observer from the tree at (2,2)
-[ [ 5, 3 ], [ 5, 3 ], [ 5, 6 ], [ 3, 2 ] ] 
-Part 2 Test   : -1
-*/
-
-// TODO: Figure out a better way to organize this
-//       The (toMap, followUp) tuple being passed all over the place feels like an anti-pattern
-let mapGrid = ((toMap, followUp), grid) => {
+let mapGrid = (toMap, followUp, grid) => {
   let (lenX, lenY) = grid |> getGridDimensions;
 
   Int.rangeAsArray(0, lenX)
@@ -144,17 +126,20 @@ let mapGrid = ((toMap, followUp), grid) => {
   |> followUp
 };
 
+// TODO: Figure out a better way to organize this
+//       The (toMap, followUp) tuple being passed all over the place feels like an anti-pattern
+//       Or maybe it doesn't really matter when these are so tightly coupled together right now?
 let part1 = (isSpotVisible, Array.Int.sum);
 
 let part2 = (calculateScenicScore, Array.Int.max >> Option.getOrThrow);
 
-let run = (description, part, data) =>
+let run = (description, (toMap, followUp), data) =>
   data
   |> String.splitArray(~delimiter="\n")
   |> Array.map(
     String.splitArray(~delimiter="")
     >> Array.map(String.toInt >> Option.getOrThrow))
-  |> mapGrid(part)
+  |> mapGrid(toMap, followUp)
   |> Int.toString
   |> Shared.Log.logWithDescription(description);
 
