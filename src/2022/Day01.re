@@ -23,21 +23,13 @@ let part2 =
 let testData = "data/2022/day01test.txt";
 let problemData = "data/2022/day01.txt";
 
-Shared.IO.readFile(testData)
-|> IO.map(doWork(part1))
-|> Shared.IO.unsafeRunAndLog("Part 1 Test  ");
-
-Shared.IO.readFile(problemData)
-|> IO.map(doWork(part1))
-|> Shared.IO.unsafeRunAndLog("Part 1 Result");
-
-Shared.IO.readFile(testData)
-|> IO.map(doWork(part2))
-|> Shared.IO.unsafeRunAndLog("Part 2 Test  ");
-
-Shared.IO.readFile(problemData)
-|> IO.map(doWork(part2))
-|> Shared.IO.unsafeRunAndLog("Part 2 Result");
+Shared.IO.readRunLogAll(
+  ~testData,
+  ~problemData,
+  ~part1=doWork(part1),
+  ~part2=doWork(part2),
+  ()
+);
 
 /*
 $ node _build/default/src/2022/Day01.bs.js

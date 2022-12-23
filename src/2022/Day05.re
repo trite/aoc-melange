@@ -121,21 +121,27 @@ let grabResult =
     >> Option.getOrThrow)
   >> Array.String.join;
 
-let doWork = (description, fApplyMoves, data) =>
+let doWork = (fApplyMoves, data) =>
   data
   |> parseInput
   |> fApplyMoves
-  |> grabResult
-  |> Shared.Log.logWithDescription(description);
+  |> grabResult;
 
-Shared.File.read("data/2022/day05test.txt")
-|> doWork("Part 1 Test  ", applyMovesPart1);
+let testData = "data/2022/day05test.txt";
+let problemData = "data/2022/day05.txt";
 
-Shared.File.read("data/2022/day05.txt")
-|> doWork("Part 1 Result", applyMovesPart1);
+Shared.IO.readRunLogAll(
+  ~testData,
+  ~problemData,
+  ~part1=doWork(applyMovesPart1),
+  ~part2=doWork(applyMovesPart2),
+  ()
+);
 
-Shared.File.read("data/2022/day05test.txt")
-|> doWork("Part 2 Test  ", applyMovesPart2);
-
-Shared.File.read("data/2022/day05.txt")
-|> doWork("Part 2 Result", applyMovesPart2);
+/*
+$ node _build/default/src/2022/Day05.bs.js
+Part 1 Test   : CMZ
+Part 1 Result : BZLVHBWQF
+Part 2 Test   : MCD
+Part 2 Result : TDGJQTZSL
+*/

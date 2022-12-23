@@ -6,18 +6,6 @@ let parse =
     >> Shared.Array.toTuple2)
   >> Shared.Array.toTuple2;
 
-/*
-$ node _build/default/src/2022/Day04.bs.js
-[
-  [ [ 2, 4 ], [ 6, 8 ] ],
-  [ [ 2, 3 ], [ 4, 5 ] ],
-  [ [ 5, 7 ], [ 7, 9 ] ],
-  [ [ 2, 8 ], [ 3, 7 ] ],
-  [ [ 6, 6 ], [ 4, 6 ] ],
-  [ [ 2, 6 ], [ 4, 8 ] ]
-]
-*/
-
 let fullyContains = ((a, b)) => {
   let doesAContainB = (((a1, a2), (b1, b2))) =>
     a1 <= b1 && a2 >= b2;
@@ -29,25 +17,24 @@ let overlaps = (((a1, a2), (b1, b2))) => {
   (a1 <= b2 && a2 >= b1) || (b1 <= a2 && b2 >= a1)
 };
 
-let doWork = (description, comparison, data) =>
+let doWork = (comparison, data) =>
   data
   |> String.splitArray(~delimiter="\n")
   |> Array.filter(parse >> comparison)
   |> Array.count
-  |> Int.toString
-  |> Shared.Log.logWithDescription(description);
+  |> Int.toString;
 
-Shared.File.read("data/2022/day04test.txt")
-|> doWork("Part 1 Test  ", fullyContains);
+let testData = "data/2022/day04test.txt";
 
-Shared.File.read("data/2022/day04.txt")
-|> doWork("Part 1 Result", fullyContains);
+let problemData = "data/2022/day04.txt";
 
-Shared.File.read("data/2022/day04test.txt")
-|> doWork("Part 2 Test  ", overlaps);
-
-Shared.File.read("data/2022/day04.txt")
-|> doWork("Part 2 Result", overlaps);
+Shared.IO.readRunLogAll(
+  ~testData,
+  ~problemData,
+  ~part1=doWork(fullyContains),
+  ~part2=doWork(overlaps),
+  ()
+);
 
 /*
 $ node _build/default/src/2022/Day04.bs.js
