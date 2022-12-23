@@ -28,20 +28,23 @@ let chunkToPriority =
   >> Option.getOrThrow
   >> charCodeToPriority;
 
-let doWork = (description, data) => 
-  data
-  |> String.splitArray(~delimiter="\n")
-  |> Array.chunk(3)
-  |> Array.map(chunkToPriority)
-  |> Array.Int.sum
-  |> Int.toString
-  |> Shared.Log.logWithDescription(description);
+let doWork =
+  String.splitArray(~delimiter="\n")
+  >> Array.chunk(3)
+  >> Array.map(chunkToPriority)
+  >> Array.Int.sum
+  >> Int.toString;
 
-Shared.File.read("data/2022/day03test.txt")
-|> doWork("Test  ");
+let testData = "data/2022/day03test.txt";
+let problemData = "data/2022/day03.txt";
 
-Shared.File.read("data/2022/day03.txt")
-|> doWork("Result");
+Shared.IO.readFile(testData)
+|> IO.map(doWork)
+|> Shared.IO.unsafeRunAndLog("Part 2 Test  ");
+
+Shared.IO.readFile(problemData)
+|> IO.map(doWork)
+|> Shared.IO.unsafeRunAndLog("Part 2 Result");
 
 /*
 $ node _build/default/src/2022/Day03Part2.bs.js

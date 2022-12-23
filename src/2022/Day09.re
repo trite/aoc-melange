@@ -248,8 +248,7 @@ let applyMoveIncrement = ({head, tail, tailVisited}: positionInfo, move: move, d
 
 let rec applyMove = ((positionInfo, move), debug) =>
   switch(move) {
-  | Up(0) | Down(0) | Left(0) | Right(0) =>
-    positionInfo
+  | Up(0) | Down(0) | Left(0) | Right(0) => positionInfo
   | _ => applyMove(applyMoveIncrement(positionInfo, move, debug), debug)
   }
 

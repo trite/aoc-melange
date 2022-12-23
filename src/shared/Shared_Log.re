@@ -1,4 +1,4 @@
-let (logWithDescription) = (description, toLog) =>
+let logWithDescription = (description, toLog) =>
   toLog
   |> (++)(description ++ " : ")
   |> Js.log;

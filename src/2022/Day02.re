@@ -33,15 +33,14 @@ let parseString =
      | [a, b, ..._rest] => (a |> parseMove, b |> parseMove)
      | _ => raise(Failure("Cannot parse string"));
 
-let doWork = (description, calculation, data) => 
+let doWork = (calculation, data) => 
   data
   |> String.splitList(~delimiter="\n")
   |> List.map(
     parseString
     >> calculation)
   |> List.Int.sum
-  |> Int.toString
-  |> Shared.Log.logWithDescription(description);
+  |> Int.toString;
 
 let calculatePart1 = ((opponent, self)) => {
   let result =
@@ -54,19 +53,6 @@ let calculatePart1 = ((opponent, self)) => {
   (self |> moveToScore) + (result |> outcomeToScore)
 };
 
-Shared.File.read("data/2022/day02test.txt")
-|> doWork("Part 1 Test  ", calculatePart1);
-
-Shared.File.read("data/2022/day02.txt")
-|> doWork("Part 1 Result", calculatePart1);
-
-
-
-
-
-/* Part 2 */
-
-// map what we thought was our move to become our goal for the round's outcome
 let convertMoveToOutcome =
   fun
   | Rock     => Lose
@@ -92,11 +78,24 @@ let calculatePart2 = ((opponent, self)) =>
   | Win  => (Win  |> outcomeToScore) + (opponent |> winAgainst |> moveToScore)
   };
 
-Shared.File.read("data/2022/day02test.txt")
-|> doWork("Part 2 Test  ", calculatePart2);
+let testData = "data/2022/day02test.txt";
+let problemData = "data/2022/day02.txt";
 
-Shared.File.read("data/2022/day02.txt")
-|> doWork("Part 2 Result", calculatePart2);
+Shared.IO.readFile(testData)
+|> IO.map(doWork(calculatePart1))
+|> Shared.IO.unsafeRunAndLog("Part 1 Test  ");
+
+Shared.IO.readFile(problemData)
+|> IO.map(doWork(calculatePart1))
+|> Shared.IO.unsafeRunAndLog("Part 1 Result");
+
+Shared.IO.readFile(testData)
+|> IO.map(doWork(calculatePart2))
+|> Shared.IO.unsafeRunAndLog("Part 2 Test  ");
+
+Shared.IO.readFile(problemData)
+|> IO.map(doWork(calculatePart2))
+|> Shared.IO.unsafeRunAndLog("Part 2 Result");
 
 /*
 $ node _build/default/src/2022/Day02.bs.js

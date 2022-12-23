@@ -28,19 +28,22 @@ let getPriority = x =>
     |> Option.getOrThrow
     |> charCodeToPriority;
 
-let doWork = (description, data) => 
-  data
-  |> String.splitArray(~delimiter="\n")
-  |> Array.map(getPriority)
-  |> Array.Int.sum
-  |> Int.show
-  |> Shared.Log.logWithDescription(description);
+let doWork = 
+  String.splitArray(~delimiter="\n")
+  >> Array.map(getPriority)
+  >> Array.Int.sum
+  >> Int.show;
 
-Shared.File.read("data/2022/day03test.txt")
-|> doWork("Test  ");
+let testData = "data/2022/day03test.txt";
+let problemData = "data/2022/day03.txt";
 
-Shared.File.read("data/2022/day03.txt")
-|> doWork("Result");
+Shared.IO.readFile(testData)
+|> IO.map(doWork)
+|> Shared.IO.unsafeRunAndLog("Part 1 Test  ");
+
+Shared.IO.readFile(problemData)
+|> IO.map(doWork)
+|> Shared.IO.unsafeRunAndLog("Part 1 Result");
 
 /*
 $ node _build/default/src/2022/Day03Part1.bs.js

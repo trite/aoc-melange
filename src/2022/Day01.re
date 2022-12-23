@@ -2,16 +2,14 @@ let parse =
   String.splitList(~delimiter="\n")
   >> Shared.List.split(~delimiter="")
   >> List.map(
-    List.map(int_of_string)
+    List.map(Int.fromString >> Option.getOrThrow)
     >> List.foldLeft((+), 0)
   );
 
-let doWork = (description, partFunc, data) =>
-  data
-  |> parse
-  |> partFunc
-  |> Int.toString
-  |> Shared.Log.logWithDescription(description);
+let doWork = partFunc =>
+  parse
+  >> partFunc
+  >> Int.toString;
 
 let part1 =
   List.maxBy(Int.compare)
@@ -22,17 +20,24 @@ let part2 =
   >> List.take(3)
   >> List.Int.sum;
 
-Shared.File.read("data/2022/day01test.txt")
-|> doWork("Part 1 Test  ", part1);
+let testData = "data/2022/day01test.txt";
+let problemData = "data/2022/day01.txt";
 
-Shared.File.read("data/2022/day01.txt")
-|> doWork("Part 1 Result", part1);
+Shared.IO.readFile(testData)
+|> IO.map(doWork(part1))
+|> Shared.IO.unsafeRunAndLog("Part 1 Test  ");
 
-Shared.File.read("data/2022/day01test.txt")
-|> doWork("Part 2 Test  ", part2);
+Shared.IO.readFile(problemData)
+|> IO.map(doWork(part1))
+|> Shared.IO.unsafeRunAndLog("Part 1 Result");
 
-Shared.File.read("data/2022/day01.txt")
-|> doWork("Part 2 Result", part2);
+Shared.IO.readFile(testData)
+|> IO.map(doWork(part2))
+|> Shared.IO.unsafeRunAndLog("Part 2 Test  ");
+
+Shared.IO.readFile(problemData)
+|> IO.map(doWork(part2))
+|> Shared.IO.unsafeRunAndLog("Part 2 Result");
 
 /*
 $ node _build/default/src/2022/Day01.bs.js
