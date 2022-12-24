@@ -1,5 +1,5 @@
-7 mjqjpqmgbljsphdztnvjfqwrcgsmlb
-5 bvwbjplbgvbhsrlpgdmjqwftvncz
-6 nppdvjthqldpwncqszvftbrmjlhg
-10 nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg
-11 zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw
+7 19 mjqjpqmgbljsphdztnvjfqwrcgsmlb
+5 23 bvwbjplbgvbhsrlpgdmjqwftvncz
+6 23 nppdvjthqldpwncqszvftbrmjlhg
+10 29 nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg
+11 26 zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw
