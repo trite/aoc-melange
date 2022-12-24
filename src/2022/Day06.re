@@ -2,12 +2,11 @@ let parseTestData =
   String.splitList(~delimiter="\n")
   >> List.map(
     String.splitList(~delimiter=" ")
-    >> Shared.List.toTuple2);
+    >> Shared.List.toTuple3);
 
 let (^::) = List.cons;
 
 let tails = lst => {
-  // List.scanRight((lstIn, lstAcc) => List.drop(1, lstIn) ^:: lstAcc, [], lst)
   let rec go = (lst) =>
     switch(lst) {
     | [] => []
@@ -44,29 +43,64 @@ let firstUniqueWithCount = (x, lst) => {
   go(lst, 0)
 };
 
-let doWork = (description, count, s) =>
+let doWork = (count, s) =>
   s
   |> String.toList
   |> windows(count)
   |> firstUniqueWithCount(count)
-  |> Int.toString
-  |> Shared.Log.logWithDescription(description);
+  |> Int.toString;
 
-// Should update the test data to also validate these answers eventually
-Shared.File.read("data/2022/day06test.txt")
-|> parseTestData
-|> List.forEach(
-  Tuple.second
-  >> doWork("Part 1 Test  ", 4));
+let testData = "data/2022/day06test.txt";
+let problemData = "data/2022/day06.txt";
 
-Shared.File.read("data/2022/day06.txt")
-|> doWork("Part 1 Result", 4);
+let runTest = (work, partNum, (p1Answer, p2Answer, data)) =>{
+  let result = data |> work;
+  let answer =
+    switch(partNum) {
+    | 1 => p1Answer
+    | 2 => p2Answer
+    | _ => raise(Failure("This shouldn't be a throw, but being lazy for now"))
+    };
 
-Shared.File.read("data/2022/day06test.txt")
-|> parseTestData
-|> List.forEach(
-  Tuple.second
-  >> doWork("Part 2 Test  ", 14));
+  result == answer
+  ? Ok(result)
+  : Error(
+    {j|Something went wrong.
+  Expected answer: $answer
+  Actual result  : $result
+    |j}
+  )
+};
 
-Shared.File.read("data/2022/day06.txt")
-|> doWork("Part 2 Result", 14);
+Shared.IO.readRunLogAll(
+  ~testData,
+  ~problemData,
+  ~part1=doWork(4),
+  ~part2=doWork(14),
+  ~testStyle=Shared.IO.MultipleTests((fileText, work, partNum) =>
+    fileText
+    |> parseTestData
+    |> List.toArray
+    |> Array.map(runTest(work, partNum))
+  ),
+  ()
+);
+
+/*
+$ node _build/default/src/2022/Day06.bs.js
+Part 1 Test (Success) : 7
+Part 1 Test (Success) : 5
+Part 1 Test (Success) : 6
+Part 1 Test (Success) : 10
+Part 1 Test (Success) : 11
+
+Part 1 Result : 1760
+
+Part 2 Test (Success) : 19
+Part 2 Test (Success) : 23
+Part 2 Test (Success) : 23
+Part 2 Test (Success) : 29
+Part 2 Test (Success) : 26
+
+Part 2 Result : 2974
+*/
