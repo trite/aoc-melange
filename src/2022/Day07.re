@@ -255,7 +255,7 @@ let part2 =
 
 // Program boundry IO
 
-let doWork = (description, partSpecificStuff, data) =>
+let doWork = (partSpecificStuff, data) =>
   data
   |> String.splitList(~delimiter="\n")
   |> List.map(
@@ -264,20 +264,18 @@ let doWork = (description, partSpecificStuff, data) =>
   |> runLines
   |> calculateDirSizes
   |> partSpecificStuff
-  |> Int.toString
-  |> Shared.Log.logWithDescription(description)
+  |> Int.toString;
 
-Shared.File.read("data/2022/day07test.txt")
-|> doWork("Part 1 Test  ", part1);
+let testData = "data/2022/day07test.txt";
+let problemData = "data/2022/day07.txt";
 
-Shared.File.read("data/2022/day07.txt")
-|> doWork("Part 1 Result", part1);
-
-Shared.File.read("data/2022/day07test.txt")
-|> doWork("Part 2 Test  ", part2);
-
-Shared.File.read("data/2022/day07.txt")
-|> doWork("Part 2 Result", part2);
+Shared.IO.readRunLogAll(
+  ~testData,
+  ~problemData,
+  ~part1=doWork(part1),
+  ~part2=doWork(part2),
+  ()
+);
 
 /*
 $ node _build/default/src/2022/Day07.bs.js

@@ -33,7 +33,8 @@ let unique = lst => {
 let firstUniqueWithCount = (x, lst) => {
   let rec go = (lst, count) =>
     switch(lst) {
-    | [] => raise(Failure("Shouldn't reach the end of the list without finding the answer"))
+    | [] => raise(Failure(
+      "Reached end of list without finding anything unique!"))
     | [subList, ...rest] =>
       unique(subList)
       ? x + count
@@ -59,7 +60,8 @@ let runTest = (work, partNum, (p1Answer, p2Answer, data)) =>{
     switch(partNum) {
     | 1 => p1Answer
     | 2 => p2Answer
-    | _ => raise(Failure("This shouldn't be a throw, but being lazy for now"))
+    | _ => raise(Failure(
+      "This shouldn't be a throw, but being lazy for now"))
     };
 
   result == answer

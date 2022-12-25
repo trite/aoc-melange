@@ -134,27 +134,25 @@ let part1 = (isSpotVisible, Array.Int.sum);
 
 let part2 = (calculateScenicScore, Array.Int.max >> Option.getOrThrow);
 
-let run = (description, (toMap, followUp), data) =>
+let run = ((toMap, followUp), data) =>
   data
   |> String.splitArray(~delimiter="\n")
   |> Array.map(
     String.splitArray(~delimiter="")
     >> Array.map(String.toInt >> Option.getOrThrow))
   |> mapGrid(toMap, followUp)
-  |> Int.toString
-  |> Shared.Log.logWithDescription(description);
+  |> Int.toString;
 
-Shared.File.read("data/2022/day08test.txt")
-|> run("Part 1 Test  ", part1);
+let testData = "data/2022/day08test.txt";
+let problemData = "data/2022/day08.txt";
 
-Shared.File.read("data/2022/day08.txt")
-|> run("Part 1 Result", part1);
-
-Shared.File.read("data/2022/day08test.txt")
-|> run("Part 2 Test  ", part2);
-
-Shared.File.read("data/2022/day08.txt")
-|> run("Part 2 Result", part2);
+Shared.IO.readRunLogAll(
+  ~testData,
+  ~problemData,
+  ~part1=run(part1),
+  ~part2=run(part2),
+  ()
+);
 
 /*
 $ node _build/default/src/2022/Day08.bs.js

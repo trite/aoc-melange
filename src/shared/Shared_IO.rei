@@ -22,7 +22,12 @@ let unsafeRunAndLog : (string, IO.t(string, string)) => unit;
 let test : testStyle => int => string;
 let result : int => string;
 
-let readRunLog : (string, string => string, string) => unit;
+let readRunLog : 
+  (
+    ~path: string,
+    ~work: string => string, 
+    ~description: string
+  ) => unit;
 
 // let readRunLogAll :
 //   (

@@ -37,7 +37,7 @@ let unsafeRunAndLog = (description, io) =>
     (++)(description ++ " : ") >> Js.log,
   ));
 
-let readRunLog = (path, work, description) =>
+let readRunLog = (~path, ~work, ~description) =>
   readFile(path)
   |> map(work)
   |> unsafeRunAndLog(description);
@@ -45,7 +45,7 @@ let readRunLog = (path, work, description) =>
 let readRunLogTest =
     (path, work, description, testStyle, partNum) =>
   switch(testStyle) {
-  | SingleTest => readRunLog(path, work, description)
+  | SingleTest => readRunLog(~path, ~work, ~description)
   | MultipleTests(handler) =>
     readFile(path)
     |> map(contents => handler(contents, work, partNum))
@@ -82,12 +82,20 @@ let readRunLogAll =
     readRunLogTest(testData, part1, test(1), testStyle, 1);
     multipleTestSpacing(testStyle);
 
-    readRunLog(problemData, part1, result(1));
+    readRunLog(
+      ~path=problemData,
+      ~work=part1,
+      ~description=result(1)
+    );
     multipleTestSpacing(testStyle);
 
     readRunLogTest(testData, part2, test(2), testStyle, 2);
     multipleTestSpacing(testStyle);
 
-    readRunLog(problemData, part2, result(2));
+    readRunLog(
+      ~path=problemData,
+      ~work=part2,
+      ~description=result(2)
+    );
     multipleTestSpacing(testStyle);
   };

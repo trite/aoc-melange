@@ -148,7 +148,10 @@ let moveTailIfNeeded = ((hx, hy), (tx, ty)) =>
     |j}))
   };
 
-let applyMoveIncrement = ({head, tail, tailVisited}: positionInfo, move: move, debug) => {
+let applyMoveIncrement = (
+    {head, tail, tailVisited}: positionInfo,
+    move: move,
+    debug) => {
   let applyMove = (move, (startX, startY)) =>
     switch(move) {
     | Up(y) => ((startX, startY + 1), Up(y-1))
@@ -298,7 +301,7 @@ let part2 = (debug, moves) =>
   // >> List.toArray
   |> Array.length;
 
-let run = (_description, part, debug, data) =>
+let run = (part, debug, data) =>
   data
   |> String.splitList(~delimiter="\n")
   |> List.map(
@@ -312,53 +315,39 @@ let run = (_description, part, debug, data) =>
   // |> determineGridSize
   // |> List.toArray
   |> part(debug)
-  // |> Js.log;
-  |> Int.toString
-  |> Shared.Log.logWithDescription(_description);
+  |> Int.toString;
 
+let testData = "data/2022/day09test.txt";
+let problemData = "data/2022/day09.txt";
 
-Shared.File.read("data/2022/day09test.txt")
-|> run("Part 1 Test  ", part1, true);
+Shared.IO.({
+  readRunLog(
+    ~path=testData,
+    ~work=run(part1, false),
+    ~description=test(SingleTest, 1)
+  );
 
-Shared.File.read("data/2022/day09.txt")
-|> run("Part 1 Result", part1, false);
+  readRunLog(
+    ~path=problemData,
+    ~work=run(part1, false),
+    ~description=result(1)
+  );
 
-// // let test = Set.
-// module MakePosition = ()
-  
-  // Belt.Id.MakeComparable({
-  //   type t = position;
-  //   let compare = ((x1, y1), (x2, y2)) =>
-  //     switch(Int.compare(x1, x2)) {
-  //     | `equal_to => Int.compare(y1, y2)
-  //     | other => other
-  //     }
-  //     // switch(Pervasives.compare(x1, x2)) {
-  //     // | 0 => Pervasives.compare(y1, y2)
-  //     // | c => c
-  //     // }
-  // })
-  // Relude.Identity.MakeComparable({
-  //   type t = position;
-  //   let compare = ((x1, y1), (x2, y2)) =>
-  //     switch(Int.compare(x1, x2)) {
-  //     | `equal_to => Int.compare(y1, y2)
-  //     | other => other
-  //     }
-  //     // switch(Pervasives.compare(x1, x2)) {
-  //     // | 0 => Pervasives.compare(y1, y2)
-  //     // | c => c
-  //     // }
-  // });
+  // readRunLog(
+  //   ~path=testData,
+  //   ~work=run(part2, false),
+  //   ~description=test(SingleTest, 2)
+  // );
+
+  // readRunLog(
+  //   ~path=problemData,
+  //   ~work=run(part2, false),
+  //   ~description=result(2)
+  // );
+});
 
 /*
 $ node _build/default/src/2022/Day09.bs.js
 Part 1 Test   : 13
 Part 1 Result : 6011
 */
-
-Shared.File.read("data/2022/day09test.txt")
-|> run("Part 2 Test  ", part2, false);
-
-// Shared.File.read("data/2022/day09.txt")
-// |> run("Part 2 Result", part2);
