@@ -29,6 +29,10 @@ install: ## Install development dependencies
 .PHONY: build
 build: ## Build the project
 	$(MEL) build
+	
+.PHONY: serve
+serve: ## Serve the application with a local HTTP server
+	npm run serve
 
 .PHONY: clean
 clean: ## Clean build artifacts and other generated files

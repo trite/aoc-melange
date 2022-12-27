@@ -10,9 +10,15 @@
     "module": "commonjs"
   },
   "suffix": ".bs.js",
+  "reason": {
+    "react-jsx": 3
+  },  
   "bs-dependencies": [
     "bs-bastet",
-    "relude"
+    "bs-css",
+    "bs-css-emotion",
+    "relude",
+    "@rescript/react"
   ],
   "bsc-flags": [
     "-open Relude.Globals"

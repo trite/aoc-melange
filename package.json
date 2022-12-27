@@ -1,8 +1,19 @@
 {
-  "scripts": {},
+  "scripts": {
+    "serve:2022:day09": "webpack serve --open --mode development --entry ./_build/default/src/2022/Day09/GraphVisualization.bs.js"
+  },
   "dependencies": {
     "bs-bastet": "^2.0.0",
-    "relude": "0.66.1"
+    "bs-css": "^15.3.1",
+    "bs-css-emotion": "^4.3.1",
+    "relude": "0.66.1",
+    "@rescript/react": "^0.10.3",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "webpack": "^5.73.0",
+    "webpack-cli": "^4.9.2",
+    "webpack-dev-server": "^4.9.1"
+  }
 }
