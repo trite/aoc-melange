@@ -24,12 +24,6 @@ let parseMove = ((direction, distance)) =>
   | _ => raise(Failure("Unexpected character"))
   };
 
-let moveToTranslation: move => Translation.t =
-  fun
-  | Up(_) => {dx: 1, dy: 0}
-  | Down(_) => {dx: (-1), dy: 0}
-  | Left(_) => {dx: 0, dy: (-1)}
-  | Right(_) => {dx: 0, dy: 1};
 
 let makeGridOfSize = (x, y, f) =>
   Int.rangeAsArray(0, y)

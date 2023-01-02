@@ -14,6 +14,14 @@ module SimState = {
       tail: Position.t,
       visited: Position.Set.t,
     };
+
+    type tailInfo = {
+      head: Position.t,
+      middle: list(Position.t),
+      tail: Position.t,
+      toCompare: Position.t,
+      visited: Position.Set.t,
+    };
   };
 
   module M = {
@@ -25,19 +33,30 @@ module SimState = {
     };
   };
 
-  type state =
-    | BetweenMoves(P.positionInfo, M.betweenMoves) // ready to move head
-    | HeadMove(P.positionInfo, M.moveInProgress) // ready to start moving middle
-    | MovingMiddle(P.movingMiddle, M.moveInProgress) // middle is moving or done and
-    | TailMove(P.positionInfo, M.moveInProgress); // done moving middle
+  module Warning = {
+    type t =
+      | UnexpectedTranslationDistance(string)
+      | NoWarning;
+  };
 
-  type history = list(state);
+  type state =
+    | Start(P.positionInfo, M.betweenMoves) // ready to move head
+    | Head(P.positionInfo, M.moveInProgress) // ready to start moving middle
+    | Middle(P.movingMiddle, M.moveInProgress) // middle is moving or done and
+    | Tail(P.tailInfo, M.moveInProgress); // done moving middle
+
+  type frame = {
+    state: state,
+    warnings: list(Warning.t)
+  };
+
+  type history = list(frame);
   // | TailMoved(positionInfo, betweenMoves);
 
   let zeroZero: Position.t = {x: 0, y: 0};
 
   let initialState = (moves: M.betweenMoves) =>
-    BetweenMoves(
+    Start(
       {
         head: zeroZero,
         middle: List.repeat(8, zeroZero),
@@ -56,7 +75,7 @@ module SimState = {
 
   let getTranslationToApply =
       ({x: x1, y: y1}: Position.t, {x: x2, y: y2}: Position.t)
-      : (Translation.t, option(string)) =>
+      : (Translation.t, Warning.t) =>
     switch (x1 - x2, y1 - y2) {
     // No movement
     | (0, 0) // same spot
@@ -67,26 +86,26 @@ module SimState = {
     | ((-1), (-1)) // lower-left
     | ((-1), 1) // upper-left
     | (1, (-1)) // lower-right
-    | (1, 1) => ({dx: 0, dy: 0}, None) // upper-right
+    | (1, 1) => ({dx: 0, dy: 0}, NoWarning) // upper-right
 
     // Causes movement
-    | (0, 2) => ({dx: 0, dy: 1}, None) // up
-    | (0, (-2)) => ({dx: 0, dy: (-1)}, None) // down
-    | ((-2), 0) => ({dx: (-1), dy: 0}, None) // left
-    | (2, 0) => ({dx: 1, dy: 0}, None) // right
+    | (0, 2) => ({dx: 0, dy: 1}, NoWarning) // up
+    | (0, (-2)) => ({dx: 0, dy: (-1)}, NoWarning) // down
+    | ((-2), 0) => ({dx: (-1), dy: 0}, NoWarning) // left
+    | (2, 0) => ({dx: 1, dy: 0}, NoWarning) // right
     | ((-1), (-2))
-    | ((-2), (-1)) => ({dx: (-1), dy: (-1)}, None) // lower-left
+    | ((-2), (-1)) => ({dx: (-1), dy: (-1)}, NoWarning) // lower-left
     | ((-1), 2)
-    | ((-2), 1) => ({dx: (-1), dy: 1}, None) // upper-left
+    | ((-2), 1) => ({dx: (-1), dy: 1}, NoWarning) // upper-left
     | (1, (-2))
-    | (2, (-1)) => ({dx: 1, dy: (-1)}, None) // lower-right
+    | (2, (-1)) => ({dx: 1, dy: (-1)}, NoWarning) // lower-right
     | (1, 2)
-    | (2, 1) => ({dx: 1, dy: 1}, None) // upper-right
+    | (2, 1) => ({dx: 1, dy: 1}, NoWarning) // upper-right
 
     // Unexpected - best guess + warning
     | (x, y) => (
         {dx: x |> move1, dy: y |> move1},
-        Some(
+        UnexpectedTranslationDistance(
           {j|This wasn't an expected move, review carefully!
   (x1, y1), (x2, y2)
   ($x1, $y1), ($x2, $y2)|j},
@@ -94,29 +113,124 @@ module SimState = {
       )
     };
 
+  let moveToTranslation: Day09.move => Translation.t =
+    fun
+    | Up(_) => {dx: 1, dy: 0}
+    | Down(_) => {dx: (-1), dy: 0}
+    | Left(_) => {dx: 0, dy: (-1)}
+    | Right(_) => {dx: 0, dy: 1};
+
+  let advanceMiddle =
+      (~head, ~middleDone, ~middleLeft, ~tail, ~visited, ~current, ~remaining) =>
+    switch (middleLeft) {
+    | [] =>
+      Tail(
+        {head, middle: middleDone, tail, toCompare: head, visited},
+        {current, remaining},
+      )
+    | [midHead] =>
+      Tail(
+        {head, middle: middleDone, tail, toCompare: midHead, visited},
+        {current, remaining},
+      )
+    | [midHead, ...middleLeft] =>
+      let middleDone = [
+        midHead
+        |> Position.applyTranslation(
+             getTranslationToApply(head, midHead) |> Tuple.first,
+           ),
+        ...middleDone,
+      ];
+
+      Middle(
+        {head, middleDone, middleLeft, tail, visited},
+        {current, remaining},
+      );
+    };
+
+  let decrementMove: Day09.move => Day09.move =
+    fun
+    | Up(x) => Up(x - 1)
+    | Down(x) => Down(x - 1)
+    | Left(x) => Left(x - 1)
+    | Right(x) => Right(x - 1);
+
   let advance = (state: state) =>
     // TODO: after `current` is applied and has its count
     //       reduced by 1, simply cons it back onto the
     //       list when moving from `TailMove` to `BetweenMoves`
     switch (state) {
-    | BetweenMoves({head, middle, tail, visited}, moves) =>
+    | Start({head, middle, tail, visited}, moves) =>
       let (current, remaining) = moves |> List.uncons |> Option.getOrThrow;
 
-      HeadMove(
-        {
-          head, // TODO: advance head? might make more sense like it is now...
-          middle,
-          tail,
-          visited,
-        },
-        {current, remaining},
-      );
+      let head =
+        head |> Position.applyTranslation(current |> moveToTranslation);
 
-    | HeadMove({head, middle, tail, visited}, {current, remaining}) =>
-      MovingMiddle({
-        
-      })
+      Head({head, middle, tail, visited}, {current, remaining});
+
+    | Head({head, middle, tail, visited}, {current, remaining}) =>
+      advanceMiddle(
+        ~head,
+        ~middleDone=[],
+        ~middleLeft=middle,
+        ~tail,
+        ~visited,
+        ~current,
+        ~remaining,
+      )
+
+    | Middle(
+        {head, middleDone, middleLeft, tail, visited},
+        {current, remaining},
+      ) =>
+      advanceMiddle(
+        ~head,
+        ~middleDone,
+        ~middleLeft,
+        ~tail,
+        ~visited,
+        ~current,
+        ~remaining,
+      )
+
+    | Tail({head, middle, tail, toCompare, visited}, {current, remaining}) =>
+      let updatedMoves = [current |> decrementMove, ...remaining];
+
+      let tail =
+        toCompare
+        |> Position.applyTranslation(
+             getTranslationToApply(toCompare, tail) |> Tuple.first,
+           );
+
+      Start(
+        {head, middle: middle |> List.reverse, tail, visited},
+        updatedMoves,
+      );
     };
+
+  let buildFrameList = data => {
+    let moves = data |> Day09.parseMoves;
+
+    // let rec run = (state) =>
+    //   switch(moves) {
+    //   | []
+    //   | [Up(0)]
+    //   | [Down(0)]
+    //   | [Left(0)]
+    //   | [Right(0)] =>
+    //     []
+
+    //   | [Up(0), ...rest]
+    //   | [Down(0), ...rest]
+    //   | [Left(0), ...rest]
+    //   | [Right(0), ...rest] =>
+    //     let nextMoves
+    //     []
+        
+    //   };
+
+
+  };
 };
 
 // let dataFile = Day09.testData;
