@@ -346,27 +346,31 @@ let run = (part, debug: bool, data) =>
 let testData = "data/2022/day09test.txt";
 let problemData = "data/2022/day09.txt";
 
-Shared.IO.(
-  {
-    readRunLog(
-      ~path=testData,
-      ~work=run(part1, false),
-      ~description=test(SingleTest, 1),
-    );
+// TODO: uncomment this later
+//       it's breaking the GraphVisualization stuff
+// Shared.IO.(
+//   {
+//     readRunLog(
+//       ~path=testData,
+//       ~work=run(part1, false),
+//       ~description=test(SingleTest, 1),
+//     );
 
-    readRunLog(
-      ~path=problemData,
-      ~work=run(part1, false),
-      ~description=result(1),
-    );
+//     readRunLog(
+//       ~path=problemData,
+//       ~work=run(part1, false),
+//       ~description=result(1),
+//     );
 
-    readRunLog(
-      ~path=testData,
-      ~work=run(part2, true),
-      ~description=test(SingleTest, 2),
-    );
-  }
-);
+//     readRunLog(
+//       ~path=testData,
+//       ~work=run(part2, true),
+//       ~description=test(SingleTest, 2),
+//     );
+//   }
+// );
+
+
 // readRunLog(
 //   ~path=problemData,
 //   ~work=run(part2, false),

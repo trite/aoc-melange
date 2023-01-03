@@ -46,8 +46,8 @@ module SimState = {
     | Tail(P.tailInfo, M.moveInProgress); // done moving middle
 
   type frame = {
-    state: state,
-    warnings: list(Warning.t)
+    state,
+    warnings: list(Warning.t),
   };
 
   type history = list(frame);
@@ -123,29 +123,38 @@ module SimState = {
   let advanceMiddle =
       (~head, ~middleDone, ~middleLeft, ~tail, ~visited, ~current, ~remaining) =>
     switch (middleLeft) {
-    | [] =>
-      Tail(
-        {head, middle: middleDone, tail, toCompare: head, visited},
-        {current, remaining},
-      )
-    | [midHead] =>
-      Tail(
-        {head, middle: middleDone, tail, toCompare: midHead, visited},
-        {current, remaining},
-      )
+    | [] => {
+        state:
+          Tail(
+            {head, middle: middleDone, tail, toCompare: head, visited},
+            {current, remaining},
+          ),
+        warnings: [],
+      }
+    | [midHead] => {
+        state:
+          Tail(
+            {head, middle: middleDone, tail, toCompare: midHead, visited},
+            {current, remaining},
+          ),
+        warnings: [],
+      }
     | [midHead, ...middleLeft] =>
+      let (translation, warning) = getTranslationToApply(head, midHead);
+
       let middleDone = [
-        midHead
-        |> Position.applyTranslation(
-             getTranslationToApply(head, midHead) |> Tuple.first,
-           ),
+        midHead |> Position.applyTranslation(translation),
         ...middleDone,
       ];
 
-      Middle(
-        {head, middleDone, middleLeft, tail, visited},
-        {current, remaining},
-      );
+      {
+        state:
+          Middle(
+            {head, middleDone, middleLeft, tail, visited},
+            {current, remaining},
+          ),
+        warnings: [warning],
+      };
     };
 
   let decrementMove: Day09.move => Day09.move =
@@ -154,6 +163,14 @@ module SimState = {
     | Down(x) => Down(x - 1)
     | Left(x) => Left(x - 1)
     | Right(x) => Right(x - 1);
+
+  let isMoveDone: Day09.move => bool =
+    fun
+    | Up(0)
+    | Down(0)
+    | Left(0)
+    | Right(0) => true
+    | _ => false;
 
   let advance = (state: state) =>
     // TODO: after `current` is applied and has its count
@@ -166,7 +183,10 @@ module SimState = {
       let head =
         head |> Position.applyTranslation(current |> moveToTranslation);
 
-      Head({head, middle, tail, visited}, {current, remaining});
+      {
+        state: Head({head, middle, tail, visited}, {current, remaining}),
+        warnings: [],
+      };
 
     | Head({head, middle, tail, visited}, {current, remaining}) =>
       advanceMiddle(
@@ -196,48 +216,46 @@ module SimState = {
     | Tail({head, middle, tail, toCompare, visited}, {current, remaining}) =>
       let updatedMoves = [current |> decrementMove, ...remaining];
 
-      let tail =
-        toCompare
-        |> Position.applyTranslation(
-             getTranslationToApply(toCompare, tail) |> Tuple.first,
-           );
+      let (translation, warning) = getTranslationToApply(toCompare, tail);
 
-      Start(
-        {head, middle: middle |> List.reverse, tail, visited},
-        updatedMoves,
-      );
+      let tail = toCompare |> Position.applyTranslation(translation);
+
+      {
+        state:
+          Start(
+            {head, middle: middle |> List.reverse, tail, visited},
+            updatedMoves,
+          ),
+        warnings: [warning],
+      };
     };
 
-  let buildFrameList = data => {
-    let moves = data |> Day09.parseMoves;
+  let make = (~offset, ~count, data) => {
+    let rec run = (count, state) => {
+      let {state, warnings} = state |> advance;
+      let warnings = warnings |> List.filter((!=)(Warning.NoWarning));
 
-    // let rec run = (state) =>
-    //   switch(moves) {
-    //   | []
-    //   | [Up(0)]
-    //   | [Down(0)]
-    //   | [Left(0)]
-    //   | [Right(0)] =>
-    //     []
+      switch (count) {
+      | 0 => []
+      | count => [{state, warnings}, ...run(count - 1, state)]
+      };
+      // switch (frame) {
+      // | {state: Tail(_, {current, remaining}), warnings: _}
+      //     when current |> isMoveDone && remaining == [] =>
+      //   []
+      // | {state: Start(_, _), warnings: _}
+      // | {state: Head(_, _), warnings: _}
+      // | {state: Middle(_, _), warnings: _}
+      // | {state: Tail(_, _), warnings: _} => [
+      //     frame,
+      //     ...run(count - 1, state),
+      //   ]
+      // };
+    };
 
-    //   | [Up(0), ...rest]
-    //   | [Down(0), ...rest]
-    //   | [Left(0), ...rest]
-    //   | [Right(0), ...rest] =>
-    //     let nextMoves
-    //     []
-        
-    //   };
-
-
+    data |> Day09.parseMoves |> initialState |> run(offset + count);
   };
 };
-
-// let dataFile = Day09.testData;
-// let data = Shared_File.read(dataFile);
-// let moves = data |> Day09.parseMoves;
-
-// let states =
 
 module Theme = {
   open Css;
@@ -270,14 +288,61 @@ module Styles = {
 let add1 = (+)(1);
 let sub1 = x => x - 1;
 
-module StateDisplay = {
+module Frame = {
+  module Styles = {
+    open Css;
+
+    let mainContainer = style([display(flexBox)]);
+    // let
+  };
+
   [@react.component]
-  let make = (~offset, ~count) => {
-    <div>
-       <div /> </div>;
-      // let states =
+  let make = (~frame as {state, warnings} as _frame: SimState.frame) => {
+    <div className=Styles.mainContainer>
+      <pre>
+        // TODO: render text grid from state here
+      </pre>
+
+        <p>
+          {warnings
+           |> List.length
+           |> Int.toString
+           |> (++)("Warnings: ")
+           |> React.string}
+        </p>
+        {warnings
+         |> List.map(
+              fun
+              | SimState.Warning.UnexpectedTranslationDistance(s) =>
+                <p>
+                  {{j|Unexpected Translation Distance: $s|j} |> React.string}
+                </p>
+              | NoWarning => <p> {"NoWarning" |> React.string} </p>,
+            )
+         |> List.toArray
+         |> React.array}
+      </div>;
+      // <p> {
+      //   warnings
+      //   |>
+      // } </p>
   };
 };
+
+// module StateDisplay = {
+//   [@react.component]
+//   let make = (~offset, ~count, data) => {
+//     <div>
+//       {data
+//        |> SimState.make
+//        |> List.drop(offset)
+//        |> List.take(count)
+//        |> List.map(frame => <Frame frame />)
+//        |> List.toArray
+//        |> React.array}
+//     </div>;
+//   };
+// };
 
 module App = {
   [@react.component]
@@ -388,38 +453,11 @@ R 2|j});
         />
       </div>
       <div className=Styles.container>
-        {List.makeWithIndex(count, id)
-         |> List.map(x => <div> {x |> Int.toString |> React.string} </div>)
-         //  <State
-         /***
-          //               <pre className=Styles.box>
-          //                 {{j|
-          //             $x ($offset)
-          // ..........................
-          // ..........................
-          // ..........................
-          // ..........................
-          // ..........................
-          // ..........................
-          // ..........................
-          // ..........................
-          // .........2345.............
-          // ........1...6.............
-          // ........H...7.............
-          // ............8.............
-          // ............9.............
-          // ..........................
-          // ..........................
-          // ...........s..............
-          // ..........................
-          // ..........................
-          // ..........................
-          // ..........................
-          // ..........................
-          //             |j}
-          //                  |> React.string}
-          //               </pre>
-          */
+        {data
+         |> SimState.make(~offset, ~count)
+         |> List.drop(offset)
+         |> List.take(count)
+         |> List.map(frame => <Frame frame />)
          |> List.toArray
          |> React.array}
       </div>
