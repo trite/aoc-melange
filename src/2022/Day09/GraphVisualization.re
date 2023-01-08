@@ -50,7 +50,7 @@ module SimState = {
     warnings: list(Warning.t),
   };
 
-  type history = list(frame);
+  type frameHistory = list(frame);
   // | TailMoved(positionInfo, betweenMoves);
 
   let zeroZero: Position.t = {x: 0, y: 0};
@@ -65,6 +65,39 @@ module SimState = {
       }: P.positionInfo,
       moves,
     );
+
+  let getPositionLimits =
+      (state: state): (Position.t, Position.t) =>
+    switch(state) {
+      | Start({head, middle, tail, visited}, _) =>
+    [
+      [head],
+      middle,
+      [tail],
+      visited |> Position.Set.toList
+    ]
+    |> List.foldLeft(List.concat)
+    |> (positionList =>
+    (
+      positionList
+    )
+
+    )
+        
+    };
+    // [
+    //   [head],
+    //   middle,
+    //   [tail],
+    //   visited |> Position.Set.toList
+    // ]
+    // |> List.foldLeft(List.concat);
+
+  let stateToGrid = (state: state): array(array(string)) => {
+    let grid = Int.rangeAsArray();
+    ();
+    // [|[||]|];
+  };
 
   let move1 = x =>
     switch (x) {
@@ -299,10 +332,10 @@ module Frame = {
   [@react.component]
   let make = (~frame as {state, warnings} as _frame: SimState.frame) => {
     <div className=Styles.mainContainer>
-      <pre>
-        // TODO: render text grid from state here
-      </pre>
 
+        <pre
+          // TODO: render text grid from state here
+        />
         <p>
           {warnings
            |> List.length
@@ -356,14 +389,17 @@ module App = {
     let (offset, setOffset) = React.useState(() => 0);
 
     let (data, setData) =
-      React.useState(() => {j|R 4
+      React.useState(() =>
+        {j|R 4
 U 4
 L 3
 D 1
 R 4
 D 1
 L 5
-R 2|j});
+insert some letters
+R 2|j}
+      );
 
     let getValue = e => e->ReactEvent.Form.target##value;
 
