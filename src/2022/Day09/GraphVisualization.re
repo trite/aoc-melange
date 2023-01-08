@@ -55,55 +55,83 @@ module SimState = {
 
   let zeroZero: Position.t = {x: 0, y: 0};
 
-  let initialState = (moves: M.betweenMoves) =>
+  let initialState = (moves: list(Day09.move)) =>
     Start(
       {
         head: zeroZero,
-        middle: List.repeat(8, zeroZero),
+        // middle: List.repeat(8, zeroZero),
+        middle: [],
         tail: zeroZero,
         visited: Position.Set.empty |> Position.Set.add(zeroZero),
       }: P.positionInfo,
       moves,
     );
 
-  let getPositionLimits =
-      (state: state): (Position.t, Position.t) =>
-    switch(state) {
-      | Start({head, middle, tail, visited}, _) =>
-    [
-      [head],
-      middle,
-      [tail],
-      visited |> Position.Set.toList
-    ]
-    |> List.foldLeft(List.concat)
-    |> (positionList =>
+  let getPositionLimits = (state: state): (Position.t, Position.t) =>
     (
-      positionList
+      switch (state) {
+      | Start({head, middle, tail, visited}, _)
+      | Head({head, middle, tail, visited}, _) => [
+          [head],
+          middle,
+          [tail],
+          visited |> Position.Set.toList,
+        ]
+      | Middle({head, middleDone, middleLeft, tail, visited}, _) => [
+          [head],
+          middleDone,
+          middleLeft,
+          [tail],
+          visited |> Position.Set.toList,
+        ]
+      | Tail({head, middle, tail, toCompare, visited}, _) => [
+          [head],
+          middle,
+          [tail],
+          [toCompare],
+          visited |> Position.Set.toList,
+        ]
+      }
     )
-
-    )
-        
-    };
-    // [
-    //   [head],
-    //   middle,
-    //   [tail],
-    //   visited |> Position.Set.toList
-    // ]
-    // |> List.foldLeft(List.concat);
+    |> List.foldLeft(List.concat, [])
+    |> (
+      positionList => (
+        positionList |> Position.List.min |> Option.getOrThrow,
+        positionList |> Position.List.max |> Option.getOrThrow,
+      )
+    );
 
   let stateToGrid = (state: state): array(array(string)) => {
-    let grid = Int.rangeAsArray();
-    ();
+    let grid =
+      state
+      |> getPositionLimits
+      |> (
+        (({x: xMin, y: yMin}, {x: xMax, y: yMax})) =>
+          Int.rangeAsArray(xMin, xMax)
+          |> Array.map(_ =>
+               Int.rangeAsArray(yMin, yMax) |> Array.map(_ => ".")
+             )
+      );
+    grid;
+    // let grid = Int.rangeAsArray();
+    // ();
     // [|[||]|];
   };
+
+  let gridToString = (grid: array(array(string))): string =>
+    grid |> Array.map(Array.String.join) |> Array.String.joinWith("\n");
+  // grid
+  // |> Array.map(
+  //      Array.map(Array.String.join) >> Array.String.joinWith("\n"),
+  //    );
+
+  let stateToGridString = stateToGrid >> gridToString;
 
   let move1 = x =>
     switch (x) {
     | x when x > 0 => 1
     | x when x < 0 => (-1)
-    | _ => raise(Failure("This shouldn't be possible..."))
+    | _ => 0
     };
 
   let getTranslationToApply =
@@ -325,7 +353,7 @@ module Frame = {
   module Styles = {
     open Css;
 
-    let mainContainer = style([display(flexBox)]);
+    let mainContainer = style([display(flexBox), flexDirection(column)]);
     // let
   };
 
@@ -333,9 +361,27 @@ module Frame = {
   let make = (~frame as {state, warnings} as _frame: SimState.frame) => {
     <div className=Styles.mainContainer>
 
-        <pre
-          // TODO: render text grid from state here
-        />
+        <pre> {SimState.stateToGridString(state) |> React.string} </pre>
+        <p>
+          {(
+             switch (state) {
+             | Start(_, _) => "Start"
+             | Head(_, _) => "Head"
+             | Middle(_, _) => "Middle"
+             | Tail(_, _) => "Tail"
+             }
+           )
+           |> (++)("State: ")
+           |> React.string}
+        </p>
+        <p>
+          {// let ({x:xMin, y:yMin}, {x:xMax, y:yMax}) = SimState.getPositionLimits(state)
+           SimState.getPositionLimits(state)
+           |> (
+             (({x: xMin, y: yMin}, {x: xMax, y: yMax})) => {j|($xMin,$yMin),($xMax,$yMax)|j}
+           )
+           |> React.string}
+        </p>
         <p>
           {warnings
            |> List.length
@@ -389,17 +435,14 @@ module App = {
     let (offset, setOffset) = React.useState(() => 0);
 
     let (data, setData) =
-      React.useState(() =>
-        {j|R 4
+      React.useState(() => {j|R 4
 U 4
 L 3
 D 1
 R 4
 D 1
 L 5
-insert some letters
-R 2|j}
-      );
+R 2|j});
 
     let getValue = e => e->ReactEvent.Form.target##value;
 
