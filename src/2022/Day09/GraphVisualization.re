@@ -107,9 +107,9 @@ module SimState = {
       |> getPositionLimits
       |> (
         (({x: xMin, y: yMin}, {x: xMax, y: yMax})) =>
-          Int.rangeAsArray(xMin, xMax)
+          Int.rangeAsArray(xMin, xMax + 1)
           |> Array.map(_ =>
-               Int.rangeAsArray(yMin, yMax) |> Array.map(_ => ".")
+               Int.rangeAsArray(yMin, yMax + 1) |> Array.map(_ => ".")
              )
       );
     grid;
@@ -435,8 +435,8 @@ module App = {
     let (offset, setOffset) = React.useState(() => 0);
 
     let (data, setData) =
-      React.useState(() => {j|R 4
-U 4
+      React.useState(() => {j|D 1
+D 4
 L 3
 D 1
 R 4
