@@ -67,7 +67,7 @@ module SimState = {
       moves,
     );
 
-  let getPositionLimits = (state: state): (Position.t, Position.t) =>
+  let stateToPositionList = (state: state): list(Position.t) =>
     (
       switch (state) {
       | Start({head, middle, tail, visited}, _)
@@ -93,7 +93,36 @@ module SimState = {
         ]
       }
     )
-    |> List.foldLeft(List.concat, [])
+    |> List.foldLeft(List.concat, []);
+
+  // let stateToPositionInfo = (state: state): P.positionInfo =>
+  //   switch (state) {
+  //   | Start({head, middle, tail, visited}, _)
+  //   | Head({head, middle, tail, visited}, _)
+  //   | Tail({head, middle, tail, toCompare: _, visited}, _) => {
+  //       head,
+  //       middle,
+  //       tail,
+  //       visited,
+  //     }
+
+  //   | Middle({head, middleDone, middleLeft, tail, visited}, _) => {
+  //       head,
+  //       middle: middleDone |> List.concat(middleLeft),
+  //       tail,
+  //       visited,
+  //     }
+  //   };
+
+  // Instead of `stateToPositionInfo`
+  // `populateGridPositions` as name maybe?
+  // Make a function that takes a state
+  //   and returns a function: array(array(Position.t)) => array(array(string))
+  // Next step will be to return from `stateToGrid` I think
+
+  let getPositionLimits = (state: state): (Position.t, Position.t) =>
+    state
+    |> stateToPositionList
     |> (
       positionList => (
         positionList |> Position.List.min |> Option.getOrThrow,
@@ -101,18 +130,30 @@ module SimState = {
       )
     );
 
+  let makeGrid =
+      (({x: xMin, y: yMin}: Position.t, {x: xMax, y: yMax}: Position.t)) =>
+    Int.rangeAsArray(xMin, xMax + 1)
+    |> Array.map(_ => Int.rangeAsArray(yMin, yMax + 1) |> Array.map(_ => "."));
+
+  let updateGridAtPosition =
+    (~position as {x, y}: Position.t, ~update, grid) =>
+    grid
+    |> Array.updateAt(y,
+      Array.updateAt(x, _ => update))
+
+  let populateGridPositions =
+      (state: state): (array(array(Position.t)) => array(array(string))) => {
+        switch(state) {
+          | Start({head, middle, tail, visited}, _)
+          | Head({head, middle, tail, visited}, _) =>
+            
+        }
+      };
+
   let stateToGrid = (state: state): array(array(string)) => {
-    let grid =
-      state
-      |> getPositionLimits
-      |> (
-        (({x: xMin, y: yMin}, {x: xMax, y: yMax})) =>
-          Int.rangeAsArray(xMin, xMax + 1)
-          |> Array.map(_ =>
-               Int.rangeAsArray(yMin, yMax + 1) |> Array.map(_ => ".")
-             )
-      );
-    grid;
+    let baseGrid = state |> getPositionLimits |> makeGrid;
+    let positionInfo = ();
+    ();
     // let grid = Int.rangeAsArray();
     // ();
     // [|[||]|];
@@ -227,10 +268,10 @@ module SimState = {
 
   let isMoveDone: Day09.move => bool =
     fun
-    | Up(0)
-    | Down(0)
-    | Left(0)
-    | Right(0) => true
+    | Up(x)
+    | Down(x)
+    | Left(x)
+    | Right(x) when x <= 0 => true
     | _ => false;
 
   let advance = (state: state) =>
@@ -275,7 +316,9 @@ module SimState = {
       )
 
     | Tail({head, middle, tail, toCompare, visited}, {current, remaining}) =>
-      let updatedMoves = [current |> decrementMove, ...remaining];
+      let updatedMoves =
+        isMoveDone(current)
+          ? remaining : [current |> decrementMove, ...remaining];
 
       let (translation, warning) = getTranslationToApply(toCompare, tail);
 
