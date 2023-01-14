@@ -135,29 +135,26 @@ module SimState = {
     Int.rangeAsArray(xMin, xMax + 1)
     |> Array.map(_ => Int.rangeAsArray(yMin, yMax + 1) |> Array.map(_ => "."));
 
-  let updateGridAtPosition =
-    (~position as {x, y}: Position.t, ~update, grid) =>
-    grid
-    |> Array.updateAt(y,
-      Array.updateAt(x, _ => update))
+  let updateGridAtPosition = (~position as {x, y}: Position.t, ~update, grid) =>
+    grid |> Array.updateAt(y, Array.updateAt(x, _ => update));
 
-  let populateGridPositions =
-      (state: state): (array(array(Position.t)) => array(array(string))) => {
-        switch(state) {
-          | Start({head, middle, tail, visited}, _)
-          | Head({head, middle, tail, visited}, _) =>
-            
-        }
-      };
+  // let populateGridPositions =
+  //     (state: state): (array(array(Position.t)) => array(array(string))) => {
+  //       switch(state) {
+  //         | Start({head, middle, tail, visited}, _)
+  //         | Head({head, middle, tail, visited}, _) =>
 
-  let stateToGrid = (state: state): array(array(string)) => {
-    let baseGrid = state |> getPositionLimits |> makeGrid;
-    let positionInfo = ();
-    ();
-    // let grid = Int.rangeAsArray();
-    // ();
-    // [|[||]|];
-  };
+  //       }
+  //     };
+
+  // let stateToGrid = (state: state): array(array(string)) => {
+  //   let baseGrid = state |> getPositionLimits |> makeGrid;
+  //   let positionInfo = ();
+  //   ();
+  //   // let grid = Int.rangeAsArray();
+  //   // ();
+  //   // [|[||]|];
+  // };
 
   let gridToString = (grid: array(array(string))): string =>
     grid |> Array.map(Array.String.join) |> Array.String.joinWith("\n");
@@ -166,7 +163,7 @@ module SimState = {
   //      Array.map(Array.String.join) >> Array.String.joinWith("\n"),
   //    );
 
-  let stateToGridString = stateToGrid >> gridToString;
+  // let stateToGridString = stateToGrid >> gridToString;
 
   let move1 = x =>
     switch (x) {
@@ -403,8 +400,8 @@ module Frame = {
   [@react.component]
   let make = (~frame as {state, warnings} as _frame: SimState.frame) => {
     <div className=Styles.mainContainer>
+      // <pre> {SimState.stateToGridString(state) |> React.string} </pre>
 
-        <pre> {SimState.stateToGridString(state) |> React.string} </pre>
         <p>
           {(
              switch (state) {
