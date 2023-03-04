@@ -464,18 +464,16 @@ module Frame = {
 // };
 
 module App = {
-  [@react.component]
-  let make = () => {
-    let (countText, setCountText) = React.useState(() => "5");
+  let (countText, setCountText) = React.useState(() => "5");
 
-    let (count, setCount) = React.useState(() => 5);
+  let (count, setCount) = React.useState(() => 5);
 
-    let (offsetText, setOffsetText) = React.useState(() => "0");
+  let (offsetText, setOffsetText) = React.useState(() => "0");
 
-    let (offset, setOffset) = React.useState(() => 0);
+  let (offset, setOffset) = React.useState(() => 0);
 
-    let (data, setData) =
-      React.useState(() => {j|D 1
+  let (data, setData) =
+    React.useState(() => {j|D 1
 D 4
 L 3
 D 1
@@ -484,23 +482,24 @@ D 1
 L 5
 R 2|j});
 
-    let getValue = e => e->ReactEvent.Form.target##value;
+  let getValue = e => e->ReactEvent.Form.target##value;
 
-    let onChange = (set, setText, e: ReactEvent.Form.t): unit => {
-      // let value = e->ReactEvent.Form.target##value;
-      let value = e |> getValue;
+  let onChange = (set, setText, e: ReactEvent.Form.t): unit => {
+    // let value = e->ReactEvent.Form.target##value;
+    let value = e |> getValue;
 
-      value
-      |> String.toInt
-      |> (
-        fun
-        | Some(x) => set(_ => x)
-        | None => ()
-      );
+    value
+    |> String.toInt
+    |> (
+      fun
+      | Some(x) => set(_ => x)
+      | None => ()
+    );
 
-      setText(value);
-    };
-
+    setText(value);
+  };
+  [@react.component]
+  let make = () => {
     <div>
       <div>
         <label> {"Data" |> React.string} </label>
