@@ -1,3 +1,6 @@
+This was what I used in 2022. Updated things in a new repo in 2023 at: https://github.com/trite/melange-aoc
+
+
 # aoc-melange
 
 Setting up to do [Advent of Code](https://adventofcode.com/) problems using ReasonML, compiling with [Melange](https://github.com/melange-re/melange)
